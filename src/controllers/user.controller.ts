@@ -37,33 +37,40 @@ export let get = (req, res) => {
  */
 export let create = (req, res, next) => {
 
-    let uid = (100000 + Math.floor(Math.random() * 900000));
-    let avatarUrl = req.body.headimgurl ? `/download/avatar/${uid}.jpg` : '';
+    let uid = (Math.floor(Math.random() * 10));
+    let avatarUrl = '/download/avatar/${uid}.jpg';//从平台 头像中获取单独的一个随机头像作为暂时用户头像，用户头像在后面点击个人中心后，上传自己的头像
 
     const user = new UserModel({
-        unionid: req.body.unionid,
-        headimgurl: req.body.headimgurl,
-        openid: req.body.openid,
+        uid: req.body.uid,
+        phoneNo: req.body.phoneNo ,
+        headimgurl: avatarUrl,
         sex: req.body.sex,
-        username: req.body.nickname,
-        nickname: req.body.nickname,
-        uid: uid,
-        avatarUrl: avatarUrl,
-        parentProxyId: req.body.parentProxyId
+        nickname: req.body.nickname ? req.body.nickname: req.body.phoneNo,
+        username: req.body.username ? req.body.username: req.body.phoneNo,
+        password: req.body.password
     });
-
+/*
+    return user.save()
+        .then((savedUser) => {
+            console.log("download avatar:", req.body.headimgurl);
+            
+            return savedUser;
+        })
+        .catch(e => next(e));
+*/
     return user.save()
         .then((savedUser) => {
 
-            console.log("download avatar:", req.body.headimgurl);
-
-            let client: any = /https/.test(req.body.headimgurl) ? https : http;
+            console.log("download avatar:", avatarUrl);
+/*
+            let client: any = /https/.test(avatarUrl) ? https : http;
 
             let stream = fs.createWriteStream(path.join(appRoot.path, avatarUrl));
 
-            const request = client.get(req.body.headimgurl, (downloadRes) => {
+            const request = client.get(avatarUrl, (downloadRes) => {
                 downloadRes.pipe(stream);
             });
+*/
 
             return savedUser;
         })
@@ -109,3 +116,24 @@ export let remove = (req, res, next) => {
         .then((deletedUser) => res.json(deletedUser))
         .catch((e) => next(e));
 };
+
+
+/*
+* get verification code 
+*/
+
+export let getVerifiCode  = function(req,res,next)
+{
+    return res.json({
+        error: false,
+        message: "post verifi code !"
+      });
+}
+
+export let gettest  = function(req,res,next)
+{
+    return res.json({
+        error: false,
+        message: "OK1111"
+      });
+}

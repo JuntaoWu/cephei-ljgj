@@ -4,7 +4,7 @@ export default {
   // POST /api/users
   createUser: {
     body: {
-      unionid: Joi.string().required(),
+      phoneNo: Joi.string().required(),
     }
   },
   // POST /api/posts
@@ -41,5 +41,14 @@ export default {
       username: Joi.string().required(),
       password: Joi.string().required()
     }
+  },
+
+  // POST /api/users
+  createOrder: {
+    body: {
+      phoneNo: Joi.string().required(),
+      username: Joi.string().required(),
+    }
   }
+
 };

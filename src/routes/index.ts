@@ -4,6 +4,7 @@ import authRouter from './auth.route';
 import levelRouter from './level.route';
 import userRouter from './user.route';
 import postRouter from './post.route';
+import orderRouter from './order.route';
 import passport from 'passport';
 
 /* GET home page. */
@@ -16,6 +17,8 @@ router.use('/auth', authRouter);
 router.use('/post', postRouter);
 
 router.use('/user', userRouter);
+
+router.use('/order', orderRouter);
 
 router.use('/level', levelRouter);
 

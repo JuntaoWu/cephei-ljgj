@@ -16,27 +16,34 @@ import * as path from 'path';
 
 import * as uuid from 'uuid';
 
-/**
- * Returns jwt token if valid username and password is provided
- * @param req
- * @param res
- * @param next
- * @returns {*}
- */
-export let register = async (req, res, next) => {
+async function reg(req,res,next)
+{
     try {
-        let user = await UserModel.findOne({ username: req.body.username });
+        let user = await UserModel.findOne({ username: req.body.phoneNo });
         if (!user) {
-            user = new UserModel({
-                username: req.body.username,
-                password: req.body.password
-            });
-            let savedUser = await user.save();
+            let uid = (Math.floor(Math.random() * 10));
+            let avatarUrl = '/download/avatar/${uid}.jpg';//从平台 头像中获取单独的一个随机头像作为暂时用户头像，用户头像在后面点击个人中心后，上传自己的头像
 
+            user = new UserModel({
+                uid: req.body.uid? req.body.uid:"124234",
+                phoneNo: req.body.phoneNo ,
+                headimgurl: avatarUrl,
+                sex: req.body.sex?req.body.sex:"man",
+                nickname: req.body.nickname ? req.body.nickname: req.body.phoneNo,
+                password: req.body.password? req.body.password:'123456'
+            });
+
+            let savedUser = await user.save();
             return res.json({
                 error: false,
                 message: "OK",
                 data: savedUser
+            });
+        } 
+        else{
+            return res.json({
+                error: true,
+                message: "the phone no have register !"
             });
         }
     }
@@ -47,6 +54,16 @@ export let register = async (req, res, next) => {
             message: ex && ex.message || ex
         });
     }
+}
+/**
+ * Returns jwt token if valid username and password is provided
+ * @param req
+ * @param res
+ * @param next
+ * @returns {*}
+ */
+export let register = async (req, res, next) => {
+    reg(req,res,next);
 };
 
 /**
@@ -56,30 +73,54 @@ export let register = async (req, res, next) => {
  * @param next
  * @returns {*}
  */
-export let login = (req, res, next) => {
-    //console.log(user);
-    // Ideally you'll fetch this from the db
-    // Idea here was to show how jwt works with simplicity
-    if (req.body.username === req.user.username && req.body.password === req.user.password) {
-        const token = jwt.sign({
-            username: req.user.username
-        }, config.jwtSecret);
+
+export let login = async (req, res, next) => {
+
+    let user = await UserModel.findOne({ phoneNo: req.body.phoneNo });
+    if (!user) {
+        let uid = (Math.floor(Math.random() * 10));
+        let avatarUrl = '/download/avatar/${uid}.jpg';//从平台 头像中获取单独的一个随机头像作为暂时用户头像，用户头像在后面点击个人中心后，上传自己的头像
+
+        user = new UserModel({
+            uid: req.body.uid? req.body.uid:"124234",
+            phoneNo: req.body.phoneNo ,
+            headimgurl: avatarUrl,
+            sex: req.body.sex?req.body.sex:"man",
+            nickname: req.body.nickname ? req.body.nickname: req.body.phoneNo,
+            username: req.body.username ? req.body.username: req.body.phoneNo,
+            password: req.body.password? req.body.password:'123456'
+        });
+
+        let savedUser = await user.save();
+        
+        /*
         return res.json({
             error: false,
             message: "OK",
-            data: {
-                token,
-                username: req.user.username
-            }
+            data: savedUser
         });
+        */
     }
+
+    const token = jwt.sign({
+        username: req.body.username
+    }, config.jwtSecret);
+
+    return res.json({
+        error: false,
+        message: "OK",
+        data: {
+            token,
+            username: req.body.username
+        }
+    });
 
     const err = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true);
     return next(err);
 };
 
 /**
- * This is a protected route. Will return random number only if jwt token is provided in header.
+ * This is a protected route. Will return random number only if jwt token is pryovided in header.
  * @param req
  * @param res
  * @returns {*}
@@ -96,4 +137,4 @@ export let getRandomToken = () => {
     return uuid.v4().replace(/-/g, "");
 };
 
-export default { register, login, getRandomNumber };
+//export default { register, login, getRandomNumber };

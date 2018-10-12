@@ -23,6 +23,14 @@ router.route('/:userId')
   .delete(userCtrl.remove);
 
 /** Load user when API with userId route parameter is hit */
+
 router.param('userId', userCtrl.load);
+
+
+router.route('/auth/getVerificationCode')
+.get(userCtrl.gettest)
+
+/** POST /api/users - Create new user */
+.post(userCtrl.getVerifiCode);
 
 export default router;
