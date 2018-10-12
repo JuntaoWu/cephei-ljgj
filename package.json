@@ -11,6 +11,7 @@
     "debug": "node inspect ./dist/bin/www"
   },
   "dependencies": {
+    "@alicloud/sms-sdk": "^1.1.4",
     "app-root-path": "^2.1.0",
     "async": "^2.6.0",
     "bcrypt-nodejs": "^0.0.3",
@@ -46,6 +47,7 @@
     "reflect-metadata": "^0.1.12",
     "request": "^2.83.0",
     "request-promise": "^4.2.2",
+    "speakeasy": "^2.0.0",
     "typegoose": "^5.2.1",
     "winston": "^2.4.0"
   },
@@ -80,6 +82,7 @@
     "@types/passport-local": "^1.0.32",
     "@types/request": "^2.47.0",
     "@types/shelljs": "^0.7.8",
+    "@types/speakeasy": "^2.0.2",
     "@types/supertest": "^2.0.4",
     "@types/winston": "^2.3.7",
     "typescript": "^2.9.2",

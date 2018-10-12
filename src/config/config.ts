@@ -41,7 +41,11 @@ const envVarsSchema = Joi.object({
   MSSQL_PASSWORD: Joi.string().required()
     .description('MSSQL_PASSWORD'),
   MSSQL_DATABASE: Joi.string().required()
-    .description('MSSQL_DATABASE')
+    .description('MSSQL_DATABASE'),
+  SMS_ACCESS_KEY_ID: Joi.string().required()
+    .description('SMS_ACCESS_KEY_ID'),
+  SMS_SECRET_ACCESS_KEY: Joi.string().required()
+    .description('SMS_SECRET_ACCESS_KEY'),
 }).unknown()
   .required();
 
@@ -79,6 +83,10 @@ export const config = {
     database: envVars.MSSQL_DATABASE,
   },
   rootUrl: envVars.ROOT_URI,
+  aliCloud: {
+    smsAccessKeyId: envVars.SMS_ACCESS_KEY_ID,
+    smsSecretAccessKey: envVars.SMS_SECRET_ACCESS_KEY,
+  }
 };
 
 export default config;
