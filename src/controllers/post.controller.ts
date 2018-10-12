@@ -1,4 +1,3 @@
-
 import { Request, Response } from 'express';
 import { default as PostModel, Post } from '../models/post.model';
 
@@ -27,7 +26,6 @@ export let create = async (req, res, next) => {
       message: error.message
     });
   }
-
 }
 
 export let update = (params) => {
