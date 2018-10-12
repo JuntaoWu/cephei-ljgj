@@ -7,9 +7,7 @@ import { Int32 } from 'bson';
 export class OrderItem extends Typegoose {
   @prop()
   public orderid: String;
-  @prop()
-  public token: String;
-
+  
   @prop()
   public phoneNo: Int32;
 
@@ -31,6 +29,8 @@ export class OrderItem extends Typegoose {
   @prop()
   public orderDescription: String;
 
+  @prop()
+  public createdBy: String;
 }
 
 const OrderItemModel = new OrderItem().getModelForClass(OrderItem, {

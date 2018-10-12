@@ -15,11 +15,15 @@ import * as http from 'http';
 import * as fs from 'fs';
 import * as path from 'path';
 
+import * as _ from 'lodash';
+
+import moment from 'moment';
+
 export let createOrder = async (req, res, next) => {
 
     let token =  await orderModel.findOne({ token: req.body.token });
     let utoken = null;
-    if(!token)
+    if(!req.user)
     {
         let user = await UserModel.findOne({ phoneNo: req.body.phoneNo });
         if (!user) {
@@ -42,18 +46,22 @@ export let createOrder = async (req, res, next) => {
         }
     }
 
-    utoken = token;
-    let orderid = "LJGJ_ORDER_"+req.body.phoneNo+"_"+ new Date(new Date().getTime()).toString();//("yyyyMMddHHMMSS");
+    //todo: allow anonymous
+    let currentUser: User = req.user;
+
+    //await orderModel.find({createdBy: currentUser.username});
+
+    let orderid = "LJGJ_ORDER_"+_.random(10000, 99999)+"_"+ moment(new Date()).format("yyyyMMddHHmmss");//("yyyyMMddHHMMSS");
     let orderitem = new orderModel({
         orderid: orderid,
-        token:utoken,
         phoneNo:req.body.phoneNo,
         isGroupOrder: req.body.isGroupOrder,
         orderContent: req.body.orderContent,
         groupContent:req.body.groupContent,
         orderAddress:req.body.orderAddress,
         houseName:req.body.houseName,
-        orderDescription:req.body.houseName
+        orderDescription:req.body.houseName,
+        createdBy: currentUser.username,
     });
     
     let savedUser = await orderitem.save();
