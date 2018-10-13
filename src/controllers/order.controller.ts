@@ -108,44 +108,4 @@ export let createContract = async(req, res, next) => {
             orderid: req.body.orderid
         }
     });
-
-   
 }
-
-
-
-/*
-export let getContract = async (req, res, next) => {
-
-    let ordercontractObj =  await orderContractModel.findOne({ orderid: req.body.orderid });
-    if(ordercontractObj)
-    {
-        
-    }
-    let utoken = null;
-    
-    let orderid = "LJGJ_ORDER_"+req.body.phoneNo+"_"+ new Date(new Date().getTime()).toString();//("yyyyMMddHHMMSS");
-    let orderitem = new orderModel({
-        orderid: orderid,
-        token:utoken,
-        phoneNo:req.body.phoneNo,
-        isGroupOrder: req.body.isGroupOrder,
-        orderContent: req.body.orderContent,
-        groupContent:req.body.groupContent,
-        orderAddress:req.body.orderAddress,
-        houseName:req.body.houseName,
-        orderDescription:req.body.houseName
-    });
-    
-    let savedUser = await orderitem.save();
-
-    return res.json({
-        error: false,
-        message: "OK",
-        data: {
-            utoken,
-            username: req.body.username
-        }
-    });
-};
-*/

@@ -43,17 +43,23 @@ export default {
     }
   },
 
-  // POST /api/users
+  // POST /api/createOrder
   createOrder: {
     body: {
       phoneNo: Joi.string().required(),
       username: Joi.string().required(),
     }
   },
-  // POST /api/users
+  // POST /api/Contract
   createContract: {
     body: {
       orderid: Joi.string().required()
+    }
+  },
+
+  createProjectItem: {
+    body: {
+      projectid: Joi.string().required()
     }
   }
 
