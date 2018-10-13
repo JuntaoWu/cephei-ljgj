@@ -30,7 +30,6 @@ export class OrderItem extends Typegoose {
 
   @prop()
   public orderDescription: String;
-
 }
 
 const OrderItemModel = new OrderItem().getModelForClass(OrderItem, {
@@ -39,4 +38,9 @@ const OrderItemModel = new OrderItem().getModelForClass(OrderItem, {
   }
 });
 
+
+
 export default OrderItemModel;
+;
+
+

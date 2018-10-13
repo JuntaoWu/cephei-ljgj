@@ -5,6 +5,8 @@ import config from '../config/config';
 
 import { Request, Response } from 'express';
 import orderModel, { OrderItem } from '../models/order.model';
+import orderContractModel, {OrderContract  } from '../models/orderContract.model';
+
 import UserModel, { User } from '../models/user.model';
 import { NextFunction } from 'express-serve-static-core';
 
@@ -14,6 +16,7 @@ import * as https from 'https';
 import * as http from 'http';
 import * as fs from 'fs';
 import * as path from 'path';
+import OrderContractModel from '../models/orderContract.model';
 
 export let createOrder = async (req, res, next) => {
 
@@ -67,3 +70,82 @@ export let createOrder = async (req, res, next) => {
         }
     });
 };
+
+export let getContract = async(req, res, next) => {
+
+    let ordercontractObj =  await orderContractModel.find({ orderid: req.body.orderid });
+    if(ordercontractObj)
+    {
+        return res.json(ordercontractObj);
+    }
+    else{
+        return res.json({
+            error: true,
+            message: "error : getContract error",
+            data: {
+                username: req.body.orderid 
+            }
+        });
+    }
+}
+
+export let createContract = async(req, res, next) => {
+
+    let contractid = "LJGJ_ORDER_CONTRACT"+req.body.phoneNo+"_"+ new Date(new Date().getTime()).toString();//("yyyyMMddHHMMSS");
+
+    let orderitem = new OrderContractModel({
+        contractid: contractid,
+        orderid:req.body.orderid,
+        contractUrls:req.body.contractUrls,//不知道如何上传图片数组。
+    });
+
+    let savedContract = await orderitem.save();
+
+    return res.json({
+        error: false,
+        message: "OK",
+        data: {
+            orderid: req.body.orderid
+        }
+    });
+
+   
+}
+
+
+
+/*
+export let getContract = async (req, res, next) => {
+
+    let ordercontractObj =  await orderContractModel.findOne({ orderid: req.body.orderid });
+    if(ordercontractObj)
+    {
+        
+    }
+    let utoken = null;
+    
+    let orderid = "LJGJ_ORDER_"+req.body.phoneNo+"_"+ new Date(new Date().getTime()).toString();//("yyyyMMddHHMMSS");
+    let orderitem = new orderModel({
+        orderid: orderid,
+        token:utoken,
+        phoneNo:req.body.phoneNo,
+        isGroupOrder: req.body.isGroupOrder,
+        orderContent: req.body.orderContent,
+        groupContent:req.body.groupContent,
+        orderAddress:req.body.orderAddress,
+        houseName:req.body.houseName,
+        orderDescription:req.body.houseName
+    });
+    
+    let savedUser = await orderitem.save();
+
+    return res.json({
+        error: false,
+        message: "OK",
+        data: {
+            utoken,
+            username: req.body.username
+        }
+    });
+};
+*/

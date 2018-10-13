@@ -49,6 +49,12 @@ export default {
       phoneNo: Joi.string().required(),
       username: Joi.string().required(),
     }
+  },
+  // POST /api/users
+  createContract: {
+    body: {
+      orderid: Joi.string().required()
+    }
   }
 
 };

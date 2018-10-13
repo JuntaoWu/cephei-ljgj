@@ -26,7 +26,6 @@ router.route('/:userId')
 
 router.param('userId', userCtrl.load);
 
-
 router.route('/auth/getVerificationCode')
 .get(userCtrl.gettest)
 
