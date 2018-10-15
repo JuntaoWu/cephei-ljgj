@@ -9,6 +9,7 @@ import passport from './config/passport';
 
 import routes from './routes';
 import versionRouter from './routes/version';
+import _ from 'lodash';
 
 var app = express();
 
@@ -56,10 +57,19 @@ app.use((err: any, req: any, res: any, next: any) => {
 
   // render the error page
   res.status(err.status || 500);
-  res.json({
-    code: err.status,
-    message: err.message
-  });
+  if (err && err.errors && err.errors.length) {
+    const message = _(err.errors).flatMap(m => m.messages).join("\n");
+    return res.json({
+      code: err.status,
+      message: message || err.message
+    });
+  }
+  else {
+    return res.json({
+      code: err.status,
+      message: err.message
+    });
+  }
 });
 
 export default app;
