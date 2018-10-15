@@ -26,6 +26,9 @@ export class User extends Typegoose {
   @prop()
   public headimgurl?: String;
 
+  @prop()
+  public securityStamp?: String;
+
 }
 
 const UserModel = new User().getModelForClass(User, {

@@ -46,8 +46,19 @@ export default {
   // POST /api/users
   createOrder: {
     body: {
-      phoneNo: Joi.string().required(),
-      username: Joi.string().required(),
+
+    }
+  },
+  // POST /api/users
+  createContract: {
+    body: {
+      orderid: Joi.string().required()
+    }
+  },
+  // POST /api/auth/getVerificationCode
+  getVerificationCode: {
+    body: {
+      phoneNo: Joi.string().regex(/^[1-9][0-9]{10}$/).required()
     }
   }
 
