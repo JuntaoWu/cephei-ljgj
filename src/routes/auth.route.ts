@@ -12,7 +12,7 @@ const router = express.Router(); // eslint-disable-line new-cap
 
 /** POST /api/auth/login - Returns token if correct username and password is provided */
 router.route('/login')
-    .post(passport.authenticate("local"), authCtrl.login);
+    .post(passport.authenticate("local", { failWithError: true }), authCtrl.login);
 
 /** GET /api/auth/random-number - Protected route,
  * needs token returned by the above as header. Authorization: Bearer {token} */
