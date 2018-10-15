@@ -56,7 +56,10 @@ app.use((err: any, req: any, res: any, next: any) => {
 
   // render the error page
   res.status(err.status || 500);
-  res.render('error');
+  res.json({
+    code: err.status,
+    message: err.message
+  });
 });
 
 export default app;

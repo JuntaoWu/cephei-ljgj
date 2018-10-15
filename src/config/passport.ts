@@ -34,7 +34,7 @@ const localLogin = new LocalStrategy(localOptions, (username, password, done) =>
 
         if (!tokenValidates) {
             return done(null, false, {
-                message: "Your login details could not be verified. Please try again."
+                message: "Your login details could not be verified. Please try again.",
             });
         }
         return done(null, user);
