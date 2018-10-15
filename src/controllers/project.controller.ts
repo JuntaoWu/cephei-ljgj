@@ -18,7 +18,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import OrderContractModel from '../models/project.model';
 import ProjectItemModel from '../models/project.model';
-
+import projectRollItemModel from '../models/projectRollItem.model';
+import subProjectItemModel from '../models/subProjectItem.model';
 
 export let getProjectItems = (req, res, next) => {
     const { limit = 50, skip = 0 } = req.query;
@@ -26,21 +27,6 @@ export let getProjectItems = (req, res, next) => {
         .then((items) => res.json(items))
         .catch((e) => next(e));
 }
-
-/*
-@prop()
-public projectid: String;
-
-@prop()
-public projectName: String;
-
-@prop()
-public projectThumbUrl: String;
-
-@prop()
-public projectDescription: String;
-
-*/
 
 export let createProjectItem = async(req, res, next) => {
 
@@ -62,5 +48,103 @@ export let createProjectItem = async(req, res, next) => {
         }
     });
 }
+
+/**
+ * 获取工种后页面的滚动图片列表
+ * @param req 
+ * @param res 
+ * @param next 
+ */
+
+export let getProItemRollItems = async(req, res, next) => {
+    let itemObj = await orderContractModel.find({ projectid: req.body.projectid });
+    if (itemObj) {
+        return res.json(itemObj);
+    }
+    else {
+        return res.json({
+            error: true,
+            message: "error : getContract error",
+            data: {
+                projectid: req.body.projectid
+            }
+        });
+    }
+}
+
+/**
+ * 创建滚动图标列表
+ * @param req 
+ * @param res 
+ * @param next 
+ */
+export let createProItemRollItems = async(req, res, next) => {
+
+    let rollitems = new projectRollItemModel({
+        projectid: req.body.projectid,
+        rollItemUrl: req.body.rollItemUrl
+    });
+
+    let savedrollitems = await rollitems.save();
+
+    return res.json({
+        error: false,
+        message: "OK",
+        data: {
+            projectid: req.body.projectid
+        }
+    });
+}
+
+
+/**
+ * 获取子类的工作服务项
+ * @param req 
+ * @param res 
+ * @param next 
+ */
+
+export let getSubProjectItems = async(req, res, next) => {
+    let itemObj = await subProjectItemModel.find({ projectid: req.body.projectid });
+    if (itemObj) {
+        return res.json(itemObj);
+    }
+    else {
+        return res.json({
+            error: true,
+            message: "error : getContract error",
+            data: {
+                projectid: req.body.projectid
+            }
+        });
+    }
+}
+
+/**
+ * 创建滚动图标列表
+ * @param req 
+ * @param res 
+ * @param next 
+ */
+export let createSubProItems = async(req, res, next) => {
+
+    let subitems = new subProjectItemModel({
+        projectid: req.body.projectid,
+        subServiceItemList: req.body.subServiceItemList
+    });
+
+    let savedSubProjects = await subitems.save();
+
+    return res.json({
+        error: false,
+        message: "OK",
+        data: {
+            projectid: req.body.projectid
+        }
+    });
+}
+
+
+
 
 

@@ -5,7 +5,7 @@ import config from '../config/config';
 
 import { Request, Response } from 'express';
 import orderModel, { OrderItem } from '../models/order.model';
-import orderContractModel, {OrderContract  } from '../models/orderContract.model';
+import orderContractModel, { OrderContract } from '../models/orderContract.model';
 
 import UserModel, { User } from '../models/user.model';
 import { NextFunction } from 'express-serve-static-core';
@@ -17,86 +17,72 @@ import * as http from 'http';
 import * as fs from 'fs';
 import * as path from 'path';
 import OrderContractModel from '../models/orderContract.model';
+import OrderReivewModel, { OrderReivew } from '../models/orderReview.model';
+
+import * as _ from 'lodash';
+
+import moment from 'moment';
 
 export let createOrder = async (req, res, next) => {
 
-    let token =  await orderModel.findOne({ token: req.body.token });
-    let utoken = null;
-    if(!token)
-    {
-        let user = await UserModel.findOne({ phoneNo: req.body.phoneNo });
-        if (!user) {
-            let uid = (Math.floor(Math.random() * 10));
-            let avatarUrl = '/download/avatar/${uid}.jpg';//从平台 头像中获取单独的一个随机头像作为暂时用户头像，用户头像在后面点击个人中心后，上传自己的头像
-            user = new UserModel({
-                uid: req.body.uid? req.body.uid:"124234",
-                phoneNo: req.body.phoneNo ,
-                headimgurl: avatarUrl,
-                sex: req.body.sex?req.body.sex:"man",
-                username:req.body.username?req.body.username: req.body.phoneNo,
-                nickname: req.body.username? req.body.username: req.body.phoneNo,
-                password: req.body.password? req.body.password:'123456'
-            });
-            let savedUser = await user.save();
-            
-          utoken = jwt.sign({
-                username: req.body.username
-            }, config.jwtSecret);
-        }
-    }
+    let currentUser: User = req.user;
 
-    utoken = token;
-    let orderid = "LJGJ_ORDER_"+req.body.phoneNo+"_"+ new Date(new Date().getTime()).toString();//("yyyyMMddHHMMSS");
+    let token = jwt.sign({
+        username: currentUser.username
+    }, config.jwtSecret);
+
+    //await orderModel.find({createdBy: currentUser.username});
+
+    let orderid = "LJGJ_ORDER_" + _.random(10000, 99999) + "_" + moment(new Date()).format("YYYYMMDDHHmmss");//("YYYYMMDDHHmmss");
     let orderitem = new orderModel({
         orderid: orderid,
-        token:utoken,
-        phoneNo:req.body.phoneNo,
+        phoneNo: req.body.phoneNo,
         isGroupOrder: req.body.isGroupOrder,
         orderContent: req.body.orderContent,
-        groupContent:req.body.groupContent,
-        orderAddress:req.body.orderAddress,
-        houseName:req.body.houseName,
-        orderDescription:req.body.houseName
+        groupContent: req.body.groupContent,
+        orderAddress: req.body.orderAddress,
+        houseName: req.body.houseName,
+        orderDescription: req.body.houseName,
+        createdBy: currentUser.username,
     });
-    
-    let savedUser = await orderitem.save();
+
+    let savedItem = await orderitem.save();
 
     return res.json({
-        error: false,
+        code: 0,
         message: "OK",
         data: {
-            utoken,
+            token,  //jwt-token needed if in quick order mode.
             username: req.body.username
         }
     });
 };
 
-export let getContract = async(req, res, next) => {
+export let getContract = async (req, res, next) => {
 
-    let ordercontractObj =  await orderContractModel.find({ orderid: req.body.orderid });
-    if(ordercontractObj)
-    {
+    let ordercontractObj = await orderContractModel.find({ orderid: req.body.orderid });
+    if (ordercontractObj) {
         return res.json(ordercontractObj);
     }
-    else{
+    else {
         return res.json({
             error: true,
             message: "error : getContract error",
             data: {
-                username: req.body.orderid 
+                orderid: req.body.orderid
             }
         });
     }
 }
 
-export let createContract = async(req, res, next) => {
+export let createContract = async (req, res, next) => {
 
-    let contractid = "LJGJ_ORDER_CONTRACT"+req.body.phoneNo+"_"+ new Date(new Date().getTime()).toString();//("yyyyMMddHHMMSS");
+    let contractid = "LJGJ_ORDER_CONTRACT" + req.body.phoneNo + "_" + moment(new Date()).format("YYYYMMDDHHmmss");//("YYYYMMDDHHmmss");
 
     let orderitem = new OrderContractModel({
         contractid: contractid,
-        orderid:req.body.orderid,
-        contractUrls:req.body.contractUrls,//不知道如何上传图片数组。
+        orderid: req.body.orderid,
+        contractUrls: req.body.contractUrls,//不知道如何上传图片数组。
     });
 
     let savedContract = await orderitem.save();
@@ -109,3 +95,28 @@ export let createContract = async(req, res, next) => {
         }
     });
 }
+
+export let createOrderReview = async (req, res, next) => {
+
+    let reviewid = "LJGJ_Order_Reivew" + req.body.phoneNo + "_" + moment(new Date()).format("YYYYMMDDHHmmss");//("YYYYMMDDHHmmss");
+
+    let orderitem = new OrderReivewModel({
+        reviewid: reviewid,
+        orderid: req.body.orderid,
+        serviceStars: req.body.serviceStars,
+        workStars: req.body.workStars,
+        projectDes: req.body.projectDes,
+    });
+
+    let savedContract = await orderitem.save();
+
+    return res.json({
+        error: false,
+        message: "OK",
+        data: {
+            orderid: req.body.orderid
+        }
+    });
+}
+
+export default { createOrder, getContract, createContract };

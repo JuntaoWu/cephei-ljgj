@@ -46,8 +46,7 @@ export default {
   // POST /api/createOrder
   createOrder: {
     body: {
-      phoneNo: Joi.string().required(),
-      username: Joi.string().required(),
+
     }
   },
   // POST /api/Contract
@@ -56,10 +55,18 @@ export default {
       orderid: Joi.string().required()
     }
   },
-
-  createProjectItem: {
+  createReview: {
+    body: {
+      orderid: Joi.string().required()
+    }
+  },
     body: {
       projectid: Joi.string().required()
+    },
+  // POST /api/auth/getVerificationCode
+  getVerificationCode: {
+    body: {
+      phoneNo: Joi.string().regex(/^[1-9][0-9]{10}$/).required()
     }
   }
 

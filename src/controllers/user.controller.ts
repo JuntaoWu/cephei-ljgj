@@ -4,6 +4,8 @@ import * as http from 'http';
 import * as fs from 'fs';
 import appRoot from 'app-root-path';
 import * as path from 'path';
+import speakeasy from 'speakeasy';
+import MySMSClient from '../config/sms-client';
 
 export let loadByUnionId = (unionId: string) => {
     return UserModel.findOne({ unionid: unionId });
@@ -42,35 +44,36 @@ export let create = (req, res, next) => {
 
     const user = new UserModel({
         uid: req.body.uid,
-        phoneNo: req.body.phoneNo ,
+        phoneNo: req.body.phoneNo,
         headimgurl: avatarUrl,
         sex: req.body.sex,
-        nickname: req.body.nickname ? req.body.nickname: req.body.phoneNo,
-        username: req.body.username ? req.body.username: req.body.phoneNo,
-        password: req.body.password
+        nickname: req.body.nickname ? req.body.nickname : req.body.phoneNo,
+        username: req.body.username ? req.body.username : req.body.phoneNo,
+        password: req.body.password,
+        securityStamp: speakeasy.generateSecret().base32
     });
-/*
-    return user.save()
-        .then((savedUser) => {
-            console.log("download avatar:", req.body.headimgurl);
-            
-            return savedUser;
-        })
-        .catch(e => next(e));
-*/
+    /*
+        return user.save()
+            .then((savedUser) => {
+                console.log("download avatar:", req.body.headimgurl);
+                
+                return savedUser;
+            })
+            .catch(e => next(e));
+    */
     return user.save()
         .then((savedUser) => {
 
             console.log("download avatar:", avatarUrl);
-/*
-            let client: any = /https/.test(avatarUrl) ? https : http;
-
-            let stream = fs.createWriteStream(path.join(appRoot.path, avatarUrl));
-
-            const request = client.get(avatarUrl, (downloadRes) => {
-                downloadRes.pipe(stream);
-            });
-*/
+            /*
+                        let client: any = /https/.test(avatarUrl) ? https : http;
+            
+                        let stream = fs.createWriteStream(path.join(appRoot.path, avatarUrl));
+            
+                        const request = client.get(avatarUrl, (downloadRes) => {
+                            downloadRes.pipe(stream);
+                        });
+            */
 
             return savedUser;
         })
@@ -117,23 +120,9 @@ export let remove = (req, res, next) => {
         .catch((e) => next(e));
 };
 
-
-/*
-* get verification code 
-*/
-
-export let getVerifiCode  = function(req,res,next)
-{
-    return res.json({
-        error: false,
-        message: "post verifi code !"
-      });
-}
-
-export let gettest  = function(req,res,next)
-{
+export let gettest = function (req, res, next) {
     return res.json({
         error: false,
         message: "OK1111"
-      });
-}
+    });
+};
