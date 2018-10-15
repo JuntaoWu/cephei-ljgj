@@ -60,8 +60,15 @@ export default {
       orderid: Joi.string().required()
     }
   },
+  body: {
+    projectid: Joi.string().required()
+  },
+  createProjectItem: {
     body: {
-      projectid: Joi.string().required()
+      projectid:Joi.string().required(),
+      projectThumbUrl:Joi.string().required(),
+      projectName:Joi.string().required()
+    }
     },
   // POST /api/auth/getVerificationCode
   getVerificationCode: {
