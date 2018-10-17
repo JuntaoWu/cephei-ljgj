@@ -17,7 +17,7 @@ export class projectRollItem extends Typegoose {
     public projectid: String;
     
     @prop()
-    public rollItemUrls?:  Array<rollItem>;
+    public rollItemUrls?:  Array<rollItem>; 
   }
   
   var projectRollItemModel = new projectRollItem().getModelForClass(projectRollItem, {

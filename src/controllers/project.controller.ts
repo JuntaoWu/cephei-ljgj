@@ -1,25 +1,10 @@
-import * as jwt from 'jsonwebtoken';
-import httpStatus from 'http-status';
-import APIError from '../helpers/APIError';
-import config from '../config/config';
 
-import { Request, Response } from 'express';
-import orderModel, { OrderItem } from '../models/order.model';
-import orderContractModel, {OrderContract  } from '../models/orderContract.model';
+import orderContractModel, { OrderContract } from '../models/orderContract.model';
 
-import UserModel, { User } from '../models/user.model';
-import { NextFunction } from 'express-serve-static-core';
-
-import { ExtractJwt } from 'passport-jwt';
-
-import * as https from 'https';
-import * as http from 'http';
-import * as fs from 'fs';
-import * as path from 'path';
-import OrderContractModel from '../models/project.model';
 import ProjectItemModel from '../models/project.model';
-import projectRollItemModel from '../models/projectRollItem.model';
-import subProjectItemModel from '../models/subProjectItem.model';
+import projectRollItemModel from '../models/projectRoll.model';
+import subProjectItemModel from '../models/subProject.model';
+
 
 export let getProjectItems = (req, res, next) => {
     const { limit = 50, skip = 0 } = req.query;
@@ -28,13 +13,13 @@ export let getProjectItems = (req, res, next) => {
         .catch((e) => next(e));
 }
 
-export let createProjectItem = async(req, res, next) => {
+export let createProjectItem = async (req, res, next) => {
 
     let projectitem = new ProjectItemModel({
         projectid: req.body.projectid,
-        projectName:req.body.projectName,
-        projectThumbUrl:req.body.projectThumbUrl,
-        projectDescription:req.body.projectDescription
+        projectName: req.body.projectName,
+        projectThumbUrl: req.body.projectThumbUrl,
+        projectDescription: req.body.projectDescription
     });
 
     let savedContract = await projectitem.save();
@@ -44,7 +29,7 @@ export let createProjectItem = async(req, res, next) => {
         message: "OK",
         data: {
             projectid: req.body.projectid,
-            projectName:req.body.projectName,
+            projectName: req.body.projectName,
         }
     });
 }
@@ -56,15 +41,20 @@ export let createProjectItem = async(req, res, next) => {
  * @param next 
  */
 
-export let getProItemRollItems = async(req, res, next) => {
+export let getProItemRollItems = async (req, res, next) => {
     let itemObj = await orderContractModel.find({ projectid: req.body.projectid });
     if (itemObj) {
-        return res.json(itemObj);
+
+        return res.json({
+            error: false,
+            message: "OK",
+            data:itemObj
+        });
     }
     else {
         return res.json({
             error: true,
-            message: "error : getContract error",
+            message: "error : get project roll items error",
             data: {
                 projectid: req.body.projectid
             }
@@ -78,7 +68,7 @@ export let getProItemRollItems = async(req, res, next) => {
  * @param res 
  * @param next 
  */
-export let createProItemRollItems = async(req, res, next) => {
+export let createProItemRollItems = async (req, res, next) => {
 
     let rollitems = new projectRollItemModel({
         projectid: req.body.projectid,
@@ -103,15 +93,19 @@ export let createProItemRollItems = async(req, res, next) => {
  * @param next 
  */
 
-export let getSubProjectItems = async(req, res, next) => {
+export let getSubProjectItems = async (req, res, next) => {
     let itemObj = await subProjectItemModel.find({ projectid: req.body.projectid });
     if (itemObj) {
-        return res.json(itemObj);
+        return res.json({
+            error: false,
+            message: "ok",
+            data: itemObj
+        });
     }
     else {
         return res.json({
             error: true,
-            message: "error : getContract error",
+            message: "error : sub project item error",
             data: {
                 projectid: req.body.projectid
             }
@@ -120,12 +114,12 @@ export let getSubProjectItems = async(req, res, next) => {
 }
 
 /**
- * 创建滚动图标列表
+ * 创建创建 子项目列表
  * @param req 
  * @param res 
  * @param next 
  */
-export let createSubProItems = async(req, res, next) => {
+export let createSubProItems = async (req, res, next) => {
 
     let subitems = new subProjectItemModel({
         projectid: req.body.projectid,
@@ -142,8 +136,3 @@ export let createSubProItems = async(req, res, next) => {
         }
     });
 }
-
-
-
-
-

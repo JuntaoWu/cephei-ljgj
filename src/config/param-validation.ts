@@ -70,6 +70,23 @@ export default {
       projectName:Joi.string().required()
     }
     },
+    createGroupHouseItem: {
+      body: {
+        houseName:Joi.string().required(),
+        houseAdress:Joi.string().required()
+      }
+      },
+      getGroupItem: {
+        body: {
+          groupid:Joi.string().required()
+        },
+      getGroupBySearch: {
+        body: {
+          houseName:Joi.string().required()
+        }
+        },
+    },
+
   // POST /api/auth/getVerificationCode
   getVerificationCode: {
     body: {

@@ -1,7 +1,7 @@
 import { prop, Typegoose, ModelType, InstanceType } from 'typegoose';
 import { Int32 } from 'bson';
 
-class groupServicesItem {
+export class groupServicesItem {
     public gServiceItemid:string;
     public gServiceItemName: string;
 }
@@ -11,6 +11,9 @@ class groupServicesItem {
  */
 export class groupHouseItem extends Typegoose {
     
+    @prop()
+    public groupid:string;
+
     @prop()
     public houseid:string;
 
