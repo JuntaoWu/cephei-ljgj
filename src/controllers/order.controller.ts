@@ -17,6 +17,7 @@ import * as http from 'http';
 import * as fs from 'fs';
 import * as path from 'path';
 import OrderContractModel from '../models/orderContract.model';
+import OrderReivewModel, { OrderReivew } from '../models/orderReview.model';
 
 import * as _ from 'lodash';
 
@@ -68,7 +69,7 @@ export let getContract = async (req, res, next) => {
             error: true,
             message: "error : getContract error",
             data: {
-                username: req.body.orderid
+                orderid: req.body.orderid
             }
         });
     }
@@ -93,46 +94,29 @@ export let createContract = async (req, res, next) => {
             orderid: req.body.orderid
         }
     });
-
-
 }
 
+export let createOrderReview = async (req, res, next) => {
 
+    let reviewid = "LJGJ_Order_Reivew" + req.body.phoneNo + "_" + moment(new Date()).format("YYYYMMDDHHmmss");//("YYYYMMDDHHmmss");
 
-/*
-export let getContract = async (req, res, next) => {
-
-    let ordercontractObj =  await orderContractModel.findOne({ orderid: req.body.orderid });
-    if(ordercontractObj)
-    {
-        
-    }
-    let utoken = null;
-    
-    let orderid = "LJGJ_ORDER_"+req.body.phoneNo+"_"+ moment(new Date()).format("YYYYMMDDHHmmss");
-    let orderitem = new orderModel({
-        orderid: orderid,
-        token:utoken,
-        phoneNo:req.body.phoneNo,
-        isGroupOrder: req.body.isGroupOrder,
-        orderContent: req.body.orderContent,
-        groupContent:req.body.groupContent,
-        orderAddress:req.body.orderAddress,
-        houseName:req.body.houseName,
-        orderDescription:req.body.houseName
+    let orderitem = new OrderReivewModel({
+        reviewid: reviewid,
+        orderid: req.body.orderid,
+        serviceStars: req.body.serviceStars,
+        workStars: req.body.workStars,
+        projectDes: req.body.projectDes,
     });
-    
-    let savedUser = await orderitem.save();
+
+    let savedContract = await orderitem.save();
 
     return res.json({
         error: false,
         message: "OK",
         data: {
-            utoken,
-            username: req.body.username
+            orderid: req.body.orderid
         }
     });
-};
-*/
+}
 
 export default { createOrder, getContract, createContract };

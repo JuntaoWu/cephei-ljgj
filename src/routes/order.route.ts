@@ -15,4 +15,7 @@ router.route('/getOrderContract')
 router.route('/createOrderContract')
     .post(passport.authenticate("jwt", { failWithError: true }), validate(paramValidation.createContract), orderCtrl.createContract);
 
+router.route('/createOrderReview')
+    .post(passport.authenticate("jwt"), validate(paramValidation.createReview), orderCtrl.createOrderReview);
+
 export default router;

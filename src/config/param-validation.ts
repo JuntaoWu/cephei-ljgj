@@ -43,18 +43,50 @@ export default {
     }
   },
 
-  // POST /api/users
+  // POST /api/createOrder
   createOrder: {
     body: {
 
     }
   },
-  // POST /api/users
+  // POST /api/Contract
   createContract: {
     body: {
       orderid: Joi.string().required()
     }
   },
+  createReview: {
+    body: {
+      orderid: Joi.string().required()
+    }
+  },
+  body: {
+    projectid: Joi.string().required()
+  },
+  createProjectItem: {
+    body: {
+      projectid:Joi.string().required(),
+      projectThumbUrl:Joi.string().required(),
+      projectName:Joi.string().required()
+    }
+    },
+    createGroupHouseItem: {
+      body: {
+        houseName:Joi.string().required(),
+        houseAdress:Joi.string().required()
+      }
+      },
+      getGroupItem: {
+        body: {
+          groupid:Joi.string().required()
+        },
+      getGroupBySearch: {
+        body: {
+          houseName:Joi.string().required()
+        }
+        },
+    },
+
   // POST /api/auth/getVerificationCode
   getVerificationCode: {
     body: {
