@@ -87,6 +87,10 @@ export let getVerificationCode = async (req, res, next) => {
         });
         await user.save();
     }
+    if(!user.securityStamp) {
+        user.securityStamp = speakeasy.generateSecret().base32;
+        await user.save();
+    }
 
     const code = speakeasy.totp({
         secret: user.securityStamp.toString(),
@@ -99,12 +103,12 @@ export let getVerificationCode = async (req, res, next) => {
     smsClient.sendSMS({
         PhoneNumbers: req.body.phoneNo,
         SignName: '邻家工匠',
-        TemplateCode: '51LJGJ01',
+        TemplateCode: 'SMS_148080358',
         TemplateParam: `{ "code": "${code}" }`
-    }).then(function (res) {
-        let { Code } = res
+    }).then((result) => {
+        let { Code } = result;
         if (Code === 'OK') {
-            console.log(res);
+            console.log(result);
         }
         return res.json({
             code: 0,
