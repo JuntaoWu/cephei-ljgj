@@ -21,7 +21,7 @@ export class groupHouseItem extends Typegoose {
     public houseName: string;
 
     @prop()
-    public houseAdress: string;
+    public houseAddress: string;
 
     @prop()
     public houseThumbUrl:string;

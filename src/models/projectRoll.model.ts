@@ -3,7 +3,7 @@ import { Int32 } from 'bson';
 
 
 class rollItem {
-    public rollitemid:string;
+    public rollItemid:string;
     public rollItemPicUrl: string;
     public rollItemLinkUrl: string;
 }
