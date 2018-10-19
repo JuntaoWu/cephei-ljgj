@@ -185,7 +185,11 @@ export let getGroupRules = async (req, res, next) => {
 
     let grouprules = await groupRuleModel.find().limit(limit).skip(skip);
     if (grouprules) {
-         res.json(grouprules);
+        return res.json({
+            error: false,
+            message: "ok",
+            data: grouprules
+        });
     }
     else {
         return res.json({

@@ -8,7 +8,10 @@ import subProjectModel from '../models/subProject.model';
 export let getProjectItems = (req, res, next) => {
     const { limit = 50, skip = 0 } = req.query;
     ProjectItemModel.find().limit(limit).skip(skip)
-        .then((items) => res.json(items))
+        .then((items) => res.json({ 
+            error: false,
+            message: "OK",
+            data:items}))
         .catch((e) => next(e));
 }
 
