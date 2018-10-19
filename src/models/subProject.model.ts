@@ -10,7 +10,7 @@ class serviceItem {
 /**
  * Post Schema
  */
-export class subProjectItem extends Typegoose {
+export class SubProject extends Typegoose {
     
     @prop()
     public projectid: String;
@@ -19,11 +19,11 @@ export class subProjectItem extends Typegoose {
     public subServiceItemList?:  Array<serviceItem>;
   }
   
-  var subProjectItemModel = new subProjectItem().getModelForClass(subProjectItem, {
+  var subProjectModel = new SubProject().getModelForClass(SubProject, {
     schemaOptions: {
       timestamps: true,
     }
   });
   
-  export default subProjectItemModel;
+  export default subProjectModel;
   

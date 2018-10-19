@@ -73,18 +73,18 @@ export default {
     createGroupHouseItem: {
       body: {
         houseName:Joi.string().required(),
-        houseAdress:Joi.string().required()
+        houseAddress:Joi.string().required()
       }
       },
-      getGroupItem: {
-        body: {
-          groupid:Joi.string().required()
-        },
       getGroupBySearch: {
         body: {
           houseName:Joi.string().required()
         }
         },
+      getGroupItem: {
+        body: {
+          groupid:Joi.string().required()
+        }
     },
 
   // POST /api/auth/getVerificationCode

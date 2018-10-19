@@ -17,4 +17,10 @@ router.route('/getProItemRollItems')
         projectctl.getProItemRollItems(req,res,next);
     });
 
+    
+router.route('/getSubProjectItems')
+.get((req, res, next) => {
+    projectctl.getSubProjectItems(req,res,next);
+});
+
 export default router;

@@ -36,7 +36,10 @@ import groupRuleModel from '../models/groupRule.model';
  * @param next 
  */
 export let getAllGroups = async (req, res, next) => {
-    let itemObj = await groupHouseItemModel.find();
+
+    const { limit = 250, skip = 0 } = req.query;
+
+    let itemObj = await groupHouseItemModel.find().limit(limit).skip(skip);
     if (itemObj) {
         return res.json(itemObj);
     }
@@ -81,9 +84,9 @@ export let createOneGroupItem = async (req, res, next) => {
 
     let subitems = new groupHouseItemModel({
         groupid: groupid,
-        houseid: req.body.houseid,
+        houseid: houseid,
         houseName: req.body.houseName,
-        houseAdress: req.body.houseAdress,
+        houseAddress: req.body.houseAddress,
         houseThumbUrl: req.body.houseThumbUrl,
         userJoinCount: 0,
         groupServiceList: groupServiceList
@@ -178,11 +181,11 @@ export let getGroupItem = async (req, res, next) => {
  */
 export let getGroupRules = async (req, res, next) => {
     
-    let grouprules = await groupRuleModel.find();
+    const { limit = 250, skip = 0 } = req.query;
 
-    if(grouprules)
-    {
-        res.json(grouprules);
+    let grouprules = await groupRuleModel.find().limit(limit).skip(skip);
+    if (grouprules) {
+         res.json(grouprules);
     }
     else {
         return res.json({

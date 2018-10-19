@@ -11,7 +11,7 @@ class rollItem {
 /**
  * Post Schema
  */
-export class projectRollItem extends Typegoose {
+export class projectRoll extends Typegoose {
     
     @prop()
     public projectid: String;
@@ -20,11 +20,11 @@ export class projectRollItem extends Typegoose {
     public rollItemUrls?:  Array<rollItem>; 
   }
   
-  var projectRollItemModel = new projectRollItem().getModelForClass(projectRollItem, {
+  var projectRollModel = new projectRoll().getModelForClass(projectRoll, {
     schemaOptions: {
       timestamps: true,
     }
   });
   
-  export default projectRollItemModel;
+  export default projectRollModel;
   

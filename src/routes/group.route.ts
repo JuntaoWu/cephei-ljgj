@@ -14,13 +14,14 @@ router.route('/createOneGroupItem')
 .post(validate(paramValidation.createGroupHouseItem), groupctl.createOneGroupItem);
 
 router.route('/getGroupBySearch')
-.post(validate(paramValidation.createGroupHouseItem), groupctl.getGroupBySearch);
+.post(validate(paramValidation.getGroupBySearch), groupctl.getGroupBySearch);
 
 router.route('/getGroupItem')
 .post(validate(paramValidation.getGroupItem), groupctl.getGroupItem);
 
 router.route('/getGroupRules')
-.post(validate( groupctl.getGroupRules));
-
+.get((req, res, next) => {
+    groupctl.getGroupRules(req,res,next);
+});
 
 export default router;

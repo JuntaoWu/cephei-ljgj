@@ -9,7 +9,7 @@ export class groupServicesItem {
 /**
  * Post Schema
  */
-export class groupHouseItem extends Typegoose {
+export class groupHouse extends Typegoose {
     
     @prop()
     public groupid:string;
@@ -34,7 +34,7 @@ export class groupHouseItem extends Typegoose {
     
   }
   
-  var groupHouseItemModel = new groupHouseItem().getModelForClass(groupHouseItem, {
+  var groupHouseItemModel = new groupHouse().getModelForClass(groupHouse, {
     schemaOptions: {
       timestamps: true,
     }
