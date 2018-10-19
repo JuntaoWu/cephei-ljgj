@@ -98,21 +98,24 @@ export let getVerificationCode = async (req, res, next) => {
     let smsClient = new MySMSClient();
     smsClient.sendSMS({
         PhoneNumbers: req.body.phoneNo,
-        SignName: '云通信产品',
-        TemplateCode: 'SMS_000000',
-        TemplateParam: `{ "name": "用户", "code": "${code}" }`
+        SignName: '邻家工匠',
+        TemplateCode: '51LJGJ01',
+        TemplateParam: `{ "code": "${code}" }`
     }).then(function (res) {
         let { Code } = res
         if (Code === 'OK') {
             console.log(res);
         }
+        return res.json({
+            code: 0,
+            message: "OK",
+        });
     }).catch((err) => {
         console.log(err);
-    });
-
-    return res.json({
-        code: 0,
-        message: "OK",
+        return res.json({
+            code: 10001,
+            message: "Send SMS failed"
+        });
     });
 };
 
