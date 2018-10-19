@@ -1,7 +1,6 @@
 import { prop, Typegoose, ModelType, InstanceType } from 'typegoose';
 import { Int32 } from 'bson';
 
-
 /**
  * Post Schema
  */
