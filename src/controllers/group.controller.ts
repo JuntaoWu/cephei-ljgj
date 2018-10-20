@@ -114,13 +114,15 @@ export let createOneGroupItem = async (req, res, next) => {
 export let getGroupBySearch = async (req, res, next) => {
 
     var query ={};
+    
+    /*
     if(req.body.houseName)
     {
         query["houseName"] = new RegExp(req.body.houseName);
     }
-
+*/
     let itemObj = await groupHouseItemModel.find({
-        houseName : {$regex : query}
+        houseName : {$regex:req.body.houseName}
     });
 
     if (itemObj) {
