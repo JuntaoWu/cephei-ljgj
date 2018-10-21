@@ -9,6 +9,9 @@ export class OrderItem extends Typegoose {
   public orderid: String;
   
   @prop()
+  public contactsUserName: String;
+
+  @prop()
   public phoneNo: Int32;
 
   @prop()
@@ -22,6 +25,9 @@ export class OrderItem extends Typegoose {
 
   @prop()
   public orderAddress: String;
+
+  @prop()
+  public gServiceItemid: String;
 
   @prop()
   public houseName: String;

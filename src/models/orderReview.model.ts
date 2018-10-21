@@ -19,7 +19,7 @@ export class OrderReivew extends Typegoose {
     public workStars: Int32;
 
     @prop()
-    public projectDes: String;
+    public orderDes: String;
   }
   
   var OrderReivewModel = new OrderReivew().getModelForClass(OrderReivew, {
