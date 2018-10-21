@@ -38,15 +38,15 @@ export let login = async (req, res, next) => {
     }
 
     const token = jwt.sign({
-        username: req.body.username
+        username: req.body.phoneNo
     }, config.jwtSecret);
 
     return res.json({
         code: 0,
         message: "OK",
         data: {
-            token,
-            username: req.body.username
+            token:token,
+            username: req.body.phoneNo
         }
     });
 };

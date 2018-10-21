@@ -18,10 +18,27 @@ import * as fs from 'fs';
 import * as path from 'path';
 import OrderContractModel from '../models/orderContract.model';
 import OrderReivewModel, { OrderReivew } from '../models/orderReview.model';
+import groupServiceModel from '../models/groupService.model';
 
+import groupHouseItemModel, { groupServicesItem } from '../models/house.model';
 import * as _ from 'lodash';
 
 import moment from 'moment';
+
+
+/** 
+ * 获取团购服务列表
+*/
+let getGroupServiceItemName = async (gServiceItemid) => {
+    let model = await groupServiceModel.find({gServiceItemid:gServiceItemid});
+
+    let name  =model[0].gServiceItemName
+    return model.map(m => {
+        let result = m.gServiceItemName;
+        return result;
+    });
+}
+
 
 export let createOrder = async (req, res, next) => {
 
@@ -31,18 +48,20 @@ export let createOrder = async (req, res, next) => {
         username: currentUser.username
     }, config.jwtSecret);
 
-    //await orderModel.find({createdBy: currentUser.username});
-
     let orderid = "LJGJ_ORDER_" + _.random(10000, 99999) + "_" + moment(new Date()).format("YYYYMMDDHHmmss");//("YYYYMMDDHHmmss");
     let orderitem = new orderModel({
         orderid: orderid,
         phoneNo: req.body.phoneNo,
-        isGroupOrder: req.body.isGroupOrder,
-        orderContent: req.body.orderContent,
-        groupContent: req.body.groupContent,
-        orderAddress: req.body.orderAddress,
-        houseName: req.body.houseName,
-        orderDescription: req.body.houseName,
+        contactsUserName: req.body.contactsUserName,
+        isGroupOrder: req.body.isGroupOrder?req.body.isGroupOrder:false,
+        orderContent: req.body.orderContent?req.body.orderContent:"无",
+        groupContent: req.body.orderContent?req.body.orderContent:"无",
+        
+        orderAddress: req.body.orderAddress?req.body.orderAddress:"无",
+     
+        houseName: req.body.houseName?req.body.houseName:"无小区",
+        orderDescription: req.body.orderDescription?req.body.orderDescription:"无",
+        gServiceItemid: req.body.gServiceItemid?req.body.gServiceItemid:"无",
         createdBy: currentUser.username,
     });
 
@@ -52,15 +71,14 @@ export let createOrder = async (req, res, next) => {
         code: 0,
         message: "OK",
         data: {
-            token,  //jwt-token needed if in quick order mode.
-            username: req.body.username
+            token:token,  //jwt-token needed if in quick order mode.
+            username: req.body.phoneNo
         }
     });
 };
 
 export let getContract = async (req, res, next) => {
-
-    let ordercontractObj = await orderContractModel.find({ orderid: req.body.orderid });
+    let ordercontractObj = await orderContractModel.find({ orderid:req.query.orderid });
     if (ordercontractObj) {
         return res.json(ordercontractObj);
     }
@@ -105,7 +123,7 @@ export let createOrderReview = async (req, res, next) => {
         orderid: req.body.orderid,
         serviceStars: req.body.serviceStars,
         workStars: req.body.workStars,
-        projectDes: req.body.projectDes,
+        reviewDes: req.body.reviewDes,
     });
 
     let savedContract = await orderitem.save();
