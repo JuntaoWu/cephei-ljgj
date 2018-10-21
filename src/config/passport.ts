@@ -11,7 +11,7 @@ import config from './config';
 import UserModel from '../models/user.model';
 // Setting username field to phoneNo rather than username
 const localOptions = {
-    usernameField: 'username',
+    usernameField: 'phoneNo',
     passwordField: 'verificationCode',
 };
 
