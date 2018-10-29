@@ -36,7 +36,10 @@ import groupRuleModel from '../models/groupRule.model';
  * @param next 
  */
 export let getAllGroups = async (req, res, next) => {
-    let itemObj = await groupHouseItemModel.find();
+
+    const { limit = 250, skip = 0 } = req.query;
+
+    let itemObj = await groupHouseItemModel.find().limit(limit).skip(skip);
     if (itemObj) {
         return res.json(itemObj);
     }
@@ -81,10 +84,10 @@ export let createOneGroupItem = async (req, res, next) => {
 
     let subitems = new groupHouseItemModel({
         groupid: groupid,
-        houseid: req.body.houseid,
+        houseid: houseid,
         houseName: req.body.houseName,
-        houseAdress: req.body.houseAdress,
-        houseThumbUrl: req.body.houseThumbUrl,
+        houseAddress: req.body.houseAddress,
+        houseThumbUrl: req.body.houseThumbUrl?req.body.houseThumbUrl:"/image/houses/house00.jpg",
         userJoinCount: 0,
         groupServiceList: groupServiceList
     });
@@ -111,13 +114,15 @@ export let createOneGroupItem = async (req, res, next) => {
 export let getGroupBySearch = async (req, res, next) => {
 
     var query ={};
+    
+    /*
     if(req.body.houseName)
     {
         query["houseName"] = new RegExp(req.body.houseName);
     }
-
+*/
     let itemObj = await groupHouseItemModel.find({
-        houseName : {$regex : query}
+        houseName : {$regex:req.body.houseName}
     });
 
     if (itemObj) {
@@ -178,11 +183,15 @@ export let getGroupItem = async (req, res, next) => {
  */
 export let getGroupRules = async (req, res, next) => {
     
-    let grouprules = await groupRuleModel.find();
+    const { limit = 250, skip = 0 } = req.query;
 
-    if(grouprules)
-    {
-        res.json(grouprules);
+    let grouprules = await groupRuleModel.find().limit(limit).skip(skip);
+    if (grouprules) {
+        return res.json({
+            error: false,
+            message: "ok",
+            data: grouprules
+        });
     }
     else {
         return res.json({

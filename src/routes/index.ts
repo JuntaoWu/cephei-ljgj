@@ -6,6 +6,7 @@ import userRouter from './user.route';
 import postRouter from './post.route';
 import orderRouter from './order.route';
 import projectsRouter from './projects.route';
+import groupRouter from './group.route';
 import passport from 'passport';
 
 /* GET home page. */
@@ -24,5 +25,7 @@ router.use('/order', orderRouter);
 router.use('/level', levelRouter);
 
 router.use('/projects', projectsRouter);
+
+router.use('/group', groupRouter);
 
 export default router;

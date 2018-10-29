@@ -52,6 +52,7 @@ export let create = (req, res, next) => {
         password: req.body.password,
         securityStamp: speakeasy.generateSecret().base32
     });
+    
     /*
         return user.save()
             .then((savedUser) => {

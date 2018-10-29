@@ -2,14 +2,16 @@
 import orderContractModel, { OrderContract } from '../models/orderContract.model';
 
 import ProjectItemModel from '../models/project.model';
-import projectRollItemModel from '../models/projectRoll.model';
-import subProjectItemModel from '../models/subProject.model';
-
+import projectRollModel from '../models/projectRoll.model';
+import subProjectModel from '../models/subProject.model';
 
 export let getProjectItems = (req, res, next) => {
     const { limit = 50, skip = 0 } = req.query;
     ProjectItemModel.find().limit(limit).skip(skip)
-        .then((items) => res.json(items))
+        .then((items) => res.json({ 
+            error: false,
+            message: "OK",
+            data:items}))
         .catch((e) => next(e));
 }
 
@@ -42,9 +44,8 @@ export let createProjectItem = async (req, res, next) => {
  */
 
 export let getProItemRollItems = async (req, res, next) => {
-    let itemObj = await orderContractModel.find({ projectid: req.body.projectid });
+    let itemObj = await projectRollModel.findOne({ projectid:  req.query.projectid  });
     if (itemObj) {
-
         return res.json({
             error: false,
             message: "OK",
@@ -70,7 +71,7 @@ export let getProItemRollItems = async (req, res, next) => {
  */
 export let createProItemRollItems = async (req, res, next) => {
 
-    let rollitems = new projectRollItemModel({
+    let rollitems = new projectRollModel({
         projectid: req.body.projectid,
         rollItemUrl: req.body.rollItemUrl
     });
@@ -94,7 +95,7 @@ export let createProItemRollItems = async (req, res, next) => {
  */
 
 export let getSubProjectItems = async (req, res, next) => {
-    let itemObj = await subProjectItemModel.find({ projectid: req.body.projectid });
+    let itemObj = await subProjectModel.find({ projectid: req.query.projectid });
     if (itemObj) {
         return res.json({
             error: false,
@@ -121,7 +122,7 @@ export let getSubProjectItems = async (req, res, next) => {
  */
 export let createSubProItems = async (req, res, next) => {
 
-    let subitems = new subProjectItemModel({
+    let subitems = new subProjectModel({
         projectid: req.body.projectid,
         subServiceItemList: req.body.subServiceItemList
     });
