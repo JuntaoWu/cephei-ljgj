@@ -87,7 +87,7 @@ export let createOneGroupItem = async (req, res, next) => {
         houseid: houseid,
         houseName: req.body.houseName,
         houseAddress: req.body.houseAddress,
-        houseThumbUrl: req.body.houseThumbUrl,
+        houseThumbUrl: req.body.houseThumbUrl?req.body.houseThumbUrl:"/image/houses/house00.jpg",
         userJoinCount: 0,
         groupServiceList: groupServiceList
     });
