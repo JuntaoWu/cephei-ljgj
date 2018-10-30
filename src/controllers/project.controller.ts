@@ -8,10 +8,11 @@ import subProjectModel from '../models/subProject.model';
 export let getProjectItems = (req, res, next) => {
     const { limit = 50, skip = 0 } = req.query;
     ProjectItemModel.find().limit(limit).skip(skip)
-        .then((items) => res.json({ 
+        .then((items) => res.json({
             error: false,
             message: "OK",
-            data:items}))
+            data: items
+        }))
         .catch((e) => next(e));
 }
 
@@ -44,12 +45,18 @@ export let createProjectItem = async (req, res, next) => {
  */
 
 export let getProItemRollItems = async (req, res, next) => {
-    let itemObj = await projectRollModel.findOne({ projectid:  req.query.projectid  });
+    let itemObj;
+    if (req.query.projectid) {
+        itemObj = await projectRollModel.findOne({ projectid: req.query.projectid });
+    }
+    else {
+        itemObj = await projectRollModel.findOne({ homePage: true });
+    }
     if (itemObj) {
         return res.json({
             error: false,
             message: "OK",
-            data:itemObj
+            data: itemObj
         });
     }
     else {
