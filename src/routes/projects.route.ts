@@ -22,4 +22,15 @@ router.route('/getSubProjectItems')
     projectctl.getSubProjectItems(req,res,next);
 });
 
+router.route('/getSubProDes')
+.get((req, res, next) => {
+    projectctl.getSubProjectDes(req,res,next);
+});
+
+router.route('/getProItemCase')
+.get((req, res, next) => {
+    projectctl.getProItemCase(req,res,next);
+});
+
+
 export default router;

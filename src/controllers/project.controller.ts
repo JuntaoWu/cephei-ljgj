@@ -4,6 +4,8 @@ import orderContractModel, { OrderContract } from '../models/orderContract.model
 import ProjectItemModel from '../models/project.model';
 import projectRollModel from '../models/projectRoll.model';
 import subProjectModel from '../models/subProject.model';
+import proCaseModel from '../models/proCase.model';
+import mobileSubProDesModel from '../models/mobileSubProDes.mode';
 
 export let getProjectItems = (req, res, next) => {
     const { limit = 50, skip = 0 } = req.query;
@@ -143,4 +145,40 @@ export let createSubProItems = async (req, res, next) => {
             projectid: req.body.projectid
         }
     });
+}
+
+
+/*
+*h获取案列列表
+ * @param req 
+ * @param res 
+ * @param next 
+*/
+export let getProItemCase = async(req,res,next)=>{
+    const { limit = 6, skip = 0 } = req.query;
+    proCaseModel.find().limit(limit).skip(skip)
+        .then((items) => res.json({
+            error: false,
+            message: "OK",
+            data: items
+        }))
+        .catch((e) => next(e));
+}
+
+
+/**
+ * 获取项目子页面的文字介绍说明
+ * @param req 
+ * @param res 
+ * @param next 
+ */
+export let getSubProjectDes = async(req,res,next)=>{
+    const { limit = 50, skip = 0 } = req.query;
+    mobileSubProDesModel.find().limit(limit).skip(skip)
+        .then((items) => res.json({
+            error: false,
+            message: "OK",
+            data: items
+        }))
+        .catch((e) => next(e));
 }
