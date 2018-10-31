@@ -22,15 +22,21 @@ router.route('/getSubProjectItems')
     projectctl.getSubProjectItems(req,res,next);
 });
 
-router.route('/getSubProDes')
+router.route('/getSubProjectDes')
 .get((req, res, next) => {
     projectctl.getSubProjectDes(req,res,next);
 });
+router.route('/createSubProjectDes')
+.post(validate(paramValidation.createSubProjectDes), projectctl.createProjectDes);
+
 
 router.route('/getProItemCase')
 .get((req, res, next) => {
     projectctl.getProItemCase(req,res,next);
 });
+router.route('/createProItemCase')
+.post(validate(paramValidation.createProjectCase), projectctl.createProjectCase);
+
 
 
 export default router;

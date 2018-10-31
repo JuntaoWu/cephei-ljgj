@@ -11,7 +11,7 @@ export class proCase extends Typegoose {
   @prop()
   public projectName: String;
   @prop()
-  public serviceItem: String;
+  public serviceTime: String;
   @prop()
   public caseThumbUrl: String;
   @prop()

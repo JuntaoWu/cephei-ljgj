@@ -84,6 +84,30 @@ self.__precacheManifest = [
     "revision": "de91d1ae88893eae624c9eb58df72106"
   },
   {
+    "url": "images/project/cases/1/01.jpg",
+    "revision": "1cc07e5815da84fae24285630916c7fb"
+  },
+  {
+    "url": "images/project/cases/2/01.jpg",
+    "revision": "f6736f9e0f3357b6308a8d3fc94aebf6"
+  },
+  {
+    "url": "images/project/cases/3/01.jpg",
+    "revision": "a7bdc0d8744334062dec8fbf7ae0e5aa"
+  },
+  {
+    "url": "images/project/cases/4/01.jpg",
+    "revision": "509bcb584141ad79f5c1488575a289f6"
+  },
+  {
+    "url": "images/project/cases/5/01.jpg",
+    "revision": "9bf9158a3c05a99a3840eaa3aea2c1fe"
+  },
+  {
+    "url": "images/project/cases/6/01.jpg",
+    "revision": "489e586201f35d1b414deadba7f6b2ca"
+  },
+  {
     "url": "images/project/rolls/1/01.jpg",
     "revision": "2bdf4fee5ed16591e714f31d91677f34"
   },

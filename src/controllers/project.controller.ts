@@ -165,6 +165,32 @@ export let getProItemCase = async(req,res,next)=>{
         .catch((e) => next(e));
 }
 
+export let createProjectCase = async (req, res, next) => {
+
+    let projectitem = new proCaseModel({
+        caseid: req.body.caseid,
+        hosueName: req.body.hosueName,
+        projectName: req.body.projectName,
+        serviceTime: req.body.serviceTime,
+        caseThumbUrl:req.body.caseThumbUrl,
+        orderid:req.body.orderid,
+        caseLinkUrl:req.body.caseLinkUrl,
+    });
+
+    let savedContract = await projectitem.save();
+
+    return res.json({
+        error: false,
+        message: "OK",
+        data: {
+            caseid: req.body.caseid,
+            hosueName: req.body.hosueName,
+            projectName: req.body.projectName
+        }
+    });
+}
+
+
 
 /**
  * 获取项目子页面的文字介绍说明
@@ -181,4 +207,24 @@ export let getSubProjectDes = async(req,res,next)=>{
             data: items
         }))
         .catch((e) => next(e));
+}
+
+
+export let createProjectDes = async (req, res, next) => {
+
+    let projectitem = new mobileSubProDesModel({
+        subProjectDesid: req.body.subProjectDesid,
+        subProjectDesContent: req.body.subProjectDesContent
+    });
+
+    let savedContract = await projectitem.save();
+
+    return res.json({
+        error: false,
+        message: "OK",
+        data: {
+            subProjectDesid: req.body.subProjectDesid,
+            subProjectDesContent: req.body.subProjectDesContent
+        }
+    });
 }

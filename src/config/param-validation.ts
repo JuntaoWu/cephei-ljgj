@@ -85,8 +85,16 @@ export default {
         body: {
           groupid:Joi.string().required()
         }
+    },createSubProjectDes: {
+      body: {
+        subProjectDesid:Joi.string().required()
+      }
     },
-
+    createProjectCase: {
+      body: {
+        caseid:Joi.string().required()
+      }
+    },
   // POST /api/auth/getVerificationCode
   getVerificationCode: {
     body: {
