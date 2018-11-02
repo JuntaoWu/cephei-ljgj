@@ -4,7 +4,7 @@ import APIError from '../helpers/APIError';
 import config from '../config/config';
 
 import { Request, Response } from 'express';
-import orderModel, { OrderItem } from '../models/order.model';
+import orderModel, { OrderItem ,shotOrderItem} from '../models/order.model';
 import orderContractModel, { OrderContract } from '../models/orderContract.model';
 
 import UserModel, { User } from '../models/user.model';
@@ -39,7 +39,6 @@ let getGroupServiceItemName = async (gServiceItemid) => {
     });
 }
 
-
 export let createOrder = async (req, res, next) => {
 
     let currentUser: User = req.user;
@@ -62,6 +61,11 @@ export let createOrder = async (req, res, next) => {
         houseName: req.body.houseName?req.body.houseName:"无小区",
         orderDescription: req.body.orderDescription?req.body.orderDescription:"无",
         gServiceItemid: req.body.gServiceItemid?req.body.gServiceItemid:"无",
+        orderThumbUrl:"",
+        orderStatus: 1,
+        orderTime:moment(new Date()).format("YYYYMMDD-HHmmss"),
+        orderAmount:"审核中...",
+        craftsman:"",
         createdBy: currentUser.username,
     });
 
@@ -135,6 +139,32 @@ export let createOrderReview = async (req, res, next) => {
             orderid: req.body.orderid
         }
     });
+}
+
+export let getMyOrders = async (req, res, next) => {
+
+    let model = await orderModel.find();
+    let shotOrders =  model.map(m => {
+        let result = new shotOrderItem();
+        result.orderid = m.orderid;
+        result.orderContent = m.orderContent;
+        result.orderStatus = m.orderStatus;
+        result.orderThumbUrl = m.orderThumbUrl;
+        result.orderTime = m.orderTime;
+        result.orderAmount = m.orderAmount;
+        result.craftsman = m.craftsman;
+        return result;
+    });
+
+    if (shotOrders) {
+        return res.json(shotOrders);
+    }
+    else {
+        return res.json({
+            error: true,
+            message: "error : getContract error"
+        });
+    }
 }
 
 export default { createOrder, getContract, createContract };

@@ -18,4 +18,8 @@ router.route('/createOrderContract')
 router.route('/createOrderReview')
     .post(passport.authenticate("jwt"), validate(paramValidation.createReview), orderCtrl.createOrderReview);
 
+router.route('/getMyOrders')
+.get(passport.authenticate("jwt"), orderCtrl.getMyOrders);
+
+
 export default router;
