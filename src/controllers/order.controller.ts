@@ -143,7 +143,9 @@ export let createOrderReview = async (req, res, next) => {
 
 export let getMyOrders = async (req, res, next) => {
 
-    let model = await orderModel.find();
+    let currentUser: User = req.user;
+    
+    let model = await orderModel.find({phoneNo:currentUser.phoneNo});
     let shotOrders =  model.map(m => {
         let result = new shotOrderItem();
         result.orderid = m.orderid;

@@ -20,6 +20,10 @@ importScripts("https://storage.googleapis.com/workbox-cdn/releases/3.4.1/workbox
  */
 self.__precacheManifest = [
   {
+    "url": "images/houses/house00.jpg",
+    "revision": "f90eef2f851f076b454ae30a29e796fa"
+  },
+  {
     "url": "images/houses/house01.jpg",
     "revision": "e54f0f721dbe57529b4c9ac55e1fe5b1"
   },
