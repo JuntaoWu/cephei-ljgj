@@ -19,11 +19,14 @@ import * as path from 'path';
 import OrderContractModel from '../models/orderContract.model';
 import OrderReivewModel, { OrderReivew } from '../models/orderReview.model';
 import groupServiceModel from '../models/groupService.model';
+import orderDiscountModel from '../models/orderdiscount.model';
+import orderWorkModel from '../models/orderwork.model';
 
 import groupHouseItemModel, { groupServicesItem } from '../models/house.model';
 import * as _ from 'lodash';
 
 import moment from 'moment';
+import { string } from 'joi';
 
 
 /** 
@@ -141,11 +144,10 @@ export let createOrderReview = async (req, res, next) => {
     });
 }
 
+//获取订单列表
 export let getMyOrders = async (req, res, next) => {
 
-    let currentUser: User = req.user;
-    
-    let model = await orderModel.find({phoneNo:currentUser.phoneNo});
+    let model = await orderModel.find();
     let shotOrders =  model.map(m => {
         let result = new shotOrderItem();
         result.orderid = m.orderid;
@@ -166,6 +168,110 @@ export let getMyOrders = async (req, res, next) => {
             error: true,
             message: "error : getContract error"
         });
+    }
+}
+
+/*
+    获取订单折扣金额，根据不同条件获取订单折扣金额
+*/ 
+let getDiscountAmount = function(discoutnid,orderamount)
+{
+    let disamount = 0;
+    switch(discoutnid)
+    {
+        case "LJGJ_DICOUNT_001":
+        {
+            if( Number(orderamount) > 2000)
+            {
+                disamount = -200;
+            }
+        }
+        break;
+        case "LJGJ_DICOUNT_002":
+        {
+            disamount = -Number(orderamount)*0.9;
+        }
+        break;
+        case "LJGJ_DICOUNT_003":
+        {
+            disamount = -Number(orderamount)*0.8;
+        }
+        break;
+        case "LJGJ_DICOUNT_004":
+        {
+            if( Number(orderamount) > 3000)
+            {
+                disamount = -350;
+            }
+        }
+        break;
+    }
+    return disamount;
+}
+
+
+/*
+    getOrderInfo :
+    获取订单详情 
+*/
+export let getOrderInfo = async (req, res, next) => {
+
+    let currentUser: User = req.user;
+    
+    let model = await orderModel.findOne({orderid:req.body.orderid});
+
+    let service = await groupServiceModel.findOne({gServiceItemid: model.gServiceItemid});
+
+    let orderdicountobj = await orderDiscountModel.find({orderid: req.body.orderid});
+    
+    let discounts =  orderdicountobj.map(m => {
+
+        let disamount = getDiscountAmount(m.discountid,model.orderAmount);
+        if(disamount<0)
+        {
+            let result = {
+                discountTitle:m.discountTitle,
+                discountAmount:disamount
+            }
+            return result;
+        }
+    });
+
+    let orderWorkobj = await orderWorkModel.find({orderid: req.body.orderid});
+
+    let orderworks =  orderWorkobj.map(m => {
+            let result = {
+                orderworkid:m.orderWorkid,
+                orderWork:m.orderWork,
+                createTime:m.createTime
+            }
+            return result;
+        }
+    );
+
+    let result = {
+        code:0,
+        message:"",
+        orderid: model.orderid,
+        orderBaseInfo: 
+        {
+            orderContent:model.orderContent,
+            orderTime:model.orderTime,
+            orderStatus:model.orderStatus,
+            orderAddress:model.orderAddress
+        },
+        groupOrderInfo: {
+            houseName: model.houseName,
+            groupService: service.gServiceItemName,
+            preAmount:model.preAmount
+        },
+        orderAmountInfo:
+        {
+            orderAmount:model.orderAmount,
+            preAmount:model.preAmount,
+            orderDiscountList:discounts
+        },
+        orderWorkList:orderworks
     }
 }
 

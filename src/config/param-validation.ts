@@ -60,6 +60,11 @@ export default {
       orderid: Joi.string().required()
     }
   },
+  getOrderInfo: {
+    body: {
+      orderid: Joi.string().required()
+    }
+  },
   body: {
     projectid: Joi.string().required()
   },

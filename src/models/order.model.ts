@@ -66,6 +66,9 @@ export class OrderItem extends Typegoose {
 
   @prop()
   public orderAmount: String;
+
+  @prop()
+  public  preAmount: String;
   
   @prop()
   public craftsman: String;

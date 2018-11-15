@@ -21,5 +21,8 @@ router.route('/createOrderReview')
 router.route('/getMyOrders')
 .get(passport.authenticate("jwt"), orderCtrl.getMyOrders);
 
+router.route('/getOrderInfo')
+.get(passport.authenticate("jwt"), validate(paramValidation.getOrderInfo), orderCtrl.getOrderInfo);
+
 
 export default router;
