@@ -148,6 +148,8 @@ export let createOrderReview = async (req, res, next) => {
 //获取订单列表
 export let getMyOrders = async (req, res, next) => {
 
+    let currentUser: User = req.user;
+
     let model = await orderModel.find();
     let shotOrders =  model.map(m => {
         let result = new shotOrderItem();
@@ -231,7 +233,7 @@ export let getOrderInfo = async (req, res, next) => {
 
     let currentUser: User = req.user;
     
-    let model = await orderModel.findOne({orderid:req.body.orderid});
+    let model = await orderModel.findOne({ orderid:req.query.orderid});
 
     let service = await groupServiceModel.findOne({gServiceItemid: model.gServiceItemid});
 
@@ -263,9 +265,7 @@ export let getOrderInfo = async (req, res, next) => {
             }
         });
     
-
-
-    let orderWorkobj = await orderWorkModel.find({orderid: req.body.orderid});
+    let orderWorkobj = await orderWorkModel.find({ orderid:req.query.orderid});
 
     let orderworks =  orderWorkobj.map(m => {
             let result = {
