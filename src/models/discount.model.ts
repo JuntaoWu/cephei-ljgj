@@ -10,6 +10,9 @@ export class discount extends Typegoose {
     @prop()
     public discountTitle:string;
     
+    @prop()
+    public projectid:string;
+    
 }
 
 var discountModel = new discount().getModelForClass(discount, {

@@ -27,6 +27,7 @@ import * as _ from 'lodash';
 
 import moment from 'moment';
 import { string } from 'joi';
+import { forEach } from 'async';
 
 
 /** 
@@ -205,6 +206,18 @@ let getDiscountAmount = function(discoutnid,orderamount)
             }
         }
         break;
+        case "LJGJ_DICOUNT_Group_001":
+        {
+            if( Number(orderamount) > 3000)
+            {
+                disamount = -300;
+            }
+        }
+        break;
+        case "LJGJ_DICOUNT_Group_002":
+        {
+            disamount = -Number(orderamount)*0.9;
+        }
     }
     return disamount;
 }
@@ -222,20 +235,35 @@ export let getOrderInfo = async (req, res, next) => {
 
     let service = await groupServiceModel.findOne({gServiceItemid: model.gServiceItemid});
 
-    let orderdicountobj = await orderDiscountModel.find({orderid: req.body.orderid});
-    
-    let discounts =  orderdicountobj.map(m => {
-
-        let disamount = getDiscountAmount(m.discountid,model.orderAmount);
-        if(disamount<0)
-        {
-            let result = {
-                discountTitle:m.discountTitle,
-                discountAmount:disamount
+    let userDiscountList = currentUser.discountList;
+    let usrdiscounts =  userDiscountList.map(m => {
+            if(model.isGroupOrder)
+            {
+                let disamount = getDiscountAmount(service.discountid,model.orderAmount);
+                if(disamount<0)
+                {
+                    let result = {
+                        discountTitle:m.discountTitle,
+                        discountAmount:disamount
+                    }
+                    return result;
+                }
             }
-            return result;
-        }
-    });
+            else if(m.projectid == model.projectid)
+            {
+                let disamount = getDiscountAmount(m.discountid,model.orderAmount);
+                if(disamount<0)
+                {
+                    let result = {
+                        discountTitle:m.discountTitle,
+                        discountAmount:disamount
+                    }
+                    return result;
+                }
+            }
+        });
+    
+
 
     let orderWorkobj = await orderWorkModel.find({orderid: req.body.orderid});
 
@@ -269,7 +297,7 @@ export let getOrderInfo = async (req, res, next) => {
         {
             orderAmount:model.orderAmount,
             preAmount:model.preAmount,
-            orderDiscountList:discounts
+            orderDiscountList:usrdiscounts
         },
         orderWorkList:orderworks
     }

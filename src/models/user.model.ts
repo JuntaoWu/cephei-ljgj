@@ -1,5 +1,7 @@
 import { prop, Typegoose, ModelType, InstanceType } from 'typegoose';
 import { ObjectID, Int32 } from 'bson';
+import { discount } from './discount.model';
+
 /**
  * User Schema
  */
@@ -28,6 +30,9 @@ export class User extends Typegoose {
 
   @prop()
   public securityStamp?: String;
+
+  @prop()
+  public discountList: Array<discount>;
 
 }
 
