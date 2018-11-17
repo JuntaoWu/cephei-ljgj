@@ -234,11 +234,23 @@ export let getOrderInfo = async (req, res, next) => {
     let currentUser: User = req.user;
     
     let model = await orderModel.findOne({ orderid:req.query.orderid});
+    if(model == null)
+    {
+        return res.json({
+            code:-1,
+            error: true,
+            message: "have no order ! "
+        });
+    }
 
     let service = await groupServiceModel.findOne({gServiceItemid: model.gServiceItemid});
 
     let userDiscountList = currentUser.discountList;
-    let usrdiscounts =  userDiscountList.map(m => {
+
+    let usrdiscounts = [];//获取符合条件的折扣条目
+    userDiscountList.forEach(
+        function(m,index)
+        {
             if(model.isGroupOrder)
             {
                 let disamount = getDiscountAmount(service.discountid,model.orderAmount);
@@ -248,7 +260,7 @@ export let getOrderInfo = async (req, res, next) => {
                         discountTitle:m.discountTitle,
                         discountAmount:disamount
                     }
-                    return result;
+                    usrdiscounts.push(result);
                 }
             }
             else if(m.projectid == model.projectid)
@@ -260,12 +272,12 @@ export let getOrderInfo = async (req, res, next) => {
                         discountTitle:m.discountTitle,
                         discountAmount:disamount
                     }
-                    return result;
+                    usrdiscounts.push(result);
                 }
             }
-        });
+        }
+    );
     
-
     let orderWorkobj = await orderWorkModel.find({ orderid:req.query.orderid});
 
     let orderworks =  orderWorkobj.map(m => {
@@ -282,7 +294,6 @@ export let getOrderInfo = async (req, res, next) => {
         code:0,
         message:"",
         orderid: model.orderid,
-       
         orderBaseInfo: 
         {
             orderContent:model.orderContent,
@@ -290,11 +301,11 @@ export let getOrderInfo = async (req, res, next) => {
             orderStatus:model.orderStatus,
             orderAddress:model.orderAddress
         } ,
-        groupOrderInfo: {
+        groupOrderInfo: model.isGroupOrder?{
             houseName: model.houseName,
             groupService: service.gServiceItemName,
             preAmount:model.preAmount
-        },
+        }:null,
         orderAmountInfo:
         {
             orderAmount:model.orderAmount,
