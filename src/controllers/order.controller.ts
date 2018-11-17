@@ -28,6 +28,7 @@ import * as _ from 'lodash';
 import moment from 'moment';
 import { string } from 'joi';
 import { forEach } from 'async';
+import discountModel from '../models/discount.model';
 
 
 /** 
@@ -220,6 +221,20 @@ let getDiscountAmount = function(discoutnid,orderamount)
         {
             disamount = -Number(orderamount)*0.9;
         }
+        break;
+        case "LJGJ_DICOUNT_Group_003":
+        {
+            disamount = -Number(orderamount)*0.9;
+        }
+        break;
+        case "LJGJ_DICOUNT_Group_004":
+        {
+            if( Number(orderamount) > 1000)
+            {
+                disamount = -100;
+            }
+        }
+        break;
     }
     return disamount;
 }
@@ -244,39 +259,47 @@ export let getOrderInfo = async (req, res, next) => {
     }
 
     let service = await groupServiceModel.findOne({gServiceItemid: model.gServiceItemid});
-
+    
     let userDiscountList = currentUser.discountList;
 
     let usrdiscounts = [];//获取符合条件的折扣条目
-    userDiscountList.forEach(
-        function(m,index)
+
+    if(model.isGroupOrder)
+    {
+        let groupDiscount = await discountModel.findOne({discountid: service.discountid});
+        
+        let disamount = getDiscountAmount(service.discountid,model.orderAmount);
+
+        if(disamount<0)
         {
-            if(model.isGroupOrder)
-            {
-                let disamount = getDiscountAmount(service.discountid,model.orderAmount);
-                if(disamount<0)
-                {
-                    let result = {
-                        discountTitle:m.discountTitle,
-                        discountAmount:disamount
-                    }
-                    usrdiscounts.push(result);
-                }
+            let result = {
+                discountTitle:groupDiscount.discountTitle,
+                discountAmount:disamount
             }
-            else if(m.projectid == model.projectid)
-            {
-                let disamount = getDiscountAmount(m.discountid,model.orderAmount);
-                if(disamount<0)
-                {
-                    let result = {
-                        discountTitle:m.discountTitle,
-                        discountAmount:disamount
-                    }
-                    usrdiscounts.push(result);
-                }
-            }
+            usrdiscounts.push(result);
         }
-    );
+    }
+    else 
+    {
+        userDiscountList.forEach(
+            function(m,index)
+            {
+               if(m.projectid == model.projectid)
+                {
+                    let disamount = getDiscountAmount(m.discountid,model.orderAmount);
+                    if(disamount<0)
+                    {
+                        let result = {
+                            discountTitle:m.discountTitle,
+                            discountAmount:disamount
+                        }
+                        usrdiscounts.push(result);
+                    }
+                }
+            }
+        );
+    }
+ 
     
     let orderWorkobj = await orderWorkModel.find({ orderid:req.query.orderid});
 
@@ -310,7 +333,7 @@ export let getOrderInfo = async (req, res, next) => {
         {
             orderAmount:model.orderAmount,
             preAmount:model.preAmount,
-            orderDiscountList:usrdiscounts
+            orderDiscountList:usrdiscounts.length>0?usrdiscounts:null
         },
         orderWorkList:orderworks
     }
