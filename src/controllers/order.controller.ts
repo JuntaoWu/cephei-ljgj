@@ -265,6 +265,7 @@ export let getOrderInfo = async (req, res, next) => {
             }
         });
     
+
     let orderWorkobj = await orderWorkModel.find({ orderid:req.query.orderid});
 
     let orderworks =  orderWorkobj.map(m => {
@@ -281,13 +282,14 @@ export let getOrderInfo = async (req, res, next) => {
         code:0,
         message:"",
         orderid: model.orderid,
+       
         orderBaseInfo: 
         {
             orderContent:model.orderContent,
             orderTime:model.orderTime,
             orderStatus:model.orderStatus,
             orderAddress:model.orderAddress
-        },
+        } ,
         groupOrderInfo: {
             houseName: model.houseName,
             groupService: service.gServiceItemName,
@@ -301,6 +303,7 @@ export let getOrderInfo = async (req, res, next) => {
         },
         orderWorkList:orderworks
     }
+    return res.json(result);
 }
 
 export default { createOrder, getContract, createContract };
