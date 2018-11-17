@@ -314,8 +314,6 @@ export let getOrderInfo = async (req, res, next) => {
     );
 
     let result = {
-        code:0,
-        message:"",
         orderid: model.orderid,
         orderBaseInfo: 
         {
@@ -337,7 +335,11 @@ export let getOrderInfo = async (req, res, next) => {
         },
         orderWorkList:orderworks
     }
-    return res.json(result);
+    return res.json({
+        code: 0,
+        message: "OK",
+        data: result
+    });
 }
 
 export default { createOrder, getContract, createContract };
