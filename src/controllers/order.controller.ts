@@ -323,7 +323,7 @@ export let getOrderInfo = async (req, res, next) => {
             orderTime:model.orderTime,
             orderStatus:model.orderStatus,
             orderAddress:model.orderAddress
-        } ,
+        },
         groupOrderInfo: model.isGroupOrder?{
             houseName: model.houseName,
             groupService: service.gServiceItemName,
@@ -333,7 +333,7 @@ export let getOrderInfo = async (req, res, next) => {
         {
             orderAmount:model.orderAmount,
             preAmount:model.preAmount,
-            orderDiscountList:usrdiscounts.length>0?usrdiscounts:null
+            orderDiscountList:usrdiscounts
         },
         orderWorkList:orderworks
     }
