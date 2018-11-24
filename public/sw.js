@@ -40,6 +40,38 @@ self.__precacheManifest = [
     "revision": "f90eef2f851f076b454ae30a29e796fa"
   },
   {
+    "url": "images/orders/LJGJ_ORDER_62131_20181110174042/contract/contract01.jpg",
+    "revision": "3aa6679f215427bf9fddc51a556a16bb"
+  },
+  {
+    "url": "images/orders/LJGJ_ORDER_62131_20181110174042/contract/contract02.jpg",
+    "revision": "4ea06cd5d8e6d321436087f4a2ffe851"
+  },
+  {
+    "url": "images/orders/LJGJ_ORDER_62131_20181110174042/contract/contract03.jpg",
+    "revision": "38524046cdf5b71e2648e15db2d0f66c"
+  },
+  {
+    "url": "images/orders/LJGJ_ORDER_62131_20181110174042/contract/contract04.jpg",
+    "revision": "bbbdd75cbe7b05b7f64b63b222d5845f"
+  },
+  {
+    "url": "images/orders/LJGJ_ORDER_83376_20181110173944/contract/contract01.jpg",
+    "revision": "3aa6679f215427bf9fddc51a556a16bb"
+  },
+  {
+    "url": "images/orders/LJGJ_ORDER_83376_20181110173944/contract/contract02.jpg",
+    "revision": "4ea06cd5d8e6d321436087f4a2ffe851"
+  },
+  {
+    "url": "images/orders/LJGJ_ORDER_83376_20181110173944/contract/contract03.jpg",
+    "revision": "38524046cdf5b71e2648e15db2d0f66c"
+  },
+  {
+    "url": "images/orders/LJGJ_ORDER_83376_20181110173944/contract/contract04.jpg",
+    "revision": "bbbdd75cbe7b05b7f64b63b222d5845f"
+  },
+  {
     "url": "images/project/001.png",
     "revision": "e67b4f68db4a23c433449e55f4966a71"
   },
@@ -110,6 +142,18 @@ self.__precacheManifest = [
   {
     "url": "images/project/cases/6/01.jpg",
     "revision": "489e586201f35d1b414deadba7f6b2ca"
+  },
+  {
+    "url": "images/project/rolls/0/01.jpg",
+    "revision": "2bdf4fee5ed16591e714f31d91677f34"
+  },
+  {
+    "url": "images/project/rolls/0/02.jpg",
+    "revision": "06fcd4d5e759d38177a8d378ccdaaa4c"
+  },
+  {
+    "url": "images/project/rolls/0/03.jpg",
+    "revision": "99ce1613a4d6a5213dda3a1f522a6200"
   },
   {
     "url": "images/project/rolls/1/01.jpg",

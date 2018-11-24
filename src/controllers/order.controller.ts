@@ -30,7 +30,6 @@ import { string } from 'joi';
 import { forEach } from 'async';
 import discountModel from '../models/discount.model';
 
-
 /** 
  * 获取团购服务列表
 */
@@ -68,7 +67,7 @@ export let createOrder = async (req, res, next) => {
         gServiceItemid: req.body.gServiceItemid?req.body.gServiceItemid:"无",
         orderThumbUrl:"",
         orderStatus: 1,
-        orderTime:moment(new Date()).format("YYYYMMDD-HHmmss"),
+        orderTime:moment(new Date()).format("YYYY-MM-DD HH:mm:ss"),//req.body.createTime,
         orderAmount:"审核中...",
         craftsman:"",
         createdBy: currentUser.username,
@@ -87,7 +86,7 @@ export let createOrder = async (req, res, next) => {
 };
 
 export let getContract = async (req, res, next) => {
-    let ordercontractObj = await orderContractModel.find({ orderid:req.query.orderid });
+    let ordercontractObj = await orderContractModel.findOne({ orderid:req.query.orderid });
     if (ordercontractObj) {
         return res.json(ordercontractObj);
     }
@@ -104,7 +103,7 @@ export let getContract = async (req, res, next) => {
 
 export let createContract = async (req, res, next) => {
 
-    let contractid = "LJGJ_ORDER_CONTRACT" + req.body.phoneNo + "_" + moment(new Date()).format("YYYYMMDDHHmmss");//("YYYYMMDDHHmmss");
+    let contractid = "LJGJ_ORDER_CONTRACT_" +_.random(10000, 99999)+ "_" + moment(new Date()).format("YYYYMMDDHHmmss");//("YYYYMMDDHHmmss");
 
     let orderitem = new OrderContractModel({
         contractid: contractid,
