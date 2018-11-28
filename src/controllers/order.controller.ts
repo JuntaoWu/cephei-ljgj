@@ -27,7 +27,8 @@ import * as _ from 'lodash';
 
 import moment from 'moment';
 import { string } from 'joi';
-
+import { forEach } from 'async';
+import discountModel from '../models/discount.model';
 
 /** 
  * 获取团购服务列表
@@ -66,7 +67,7 @@ export let createOrder = async (req, res, next) => {
         gServiceItemid: req.body.gServiceItemid?req.body.gServiceItemid:"无",
         orderThumbUrl:"",
         orderStatus: 1,
-        orderTime:moment(new Date()).format("YYYYMMDD-HHmmss"),
+        orderTime:moment(new Date()).format("YYYY-MM-DD HH:mm:ss"),//req.body.createTime,
         orderAmount:"审核中...",
         craftsman:"",
         createdBy: currentUser.username,
@@ -85,7 +86,7 @@ export let createOrder = async (req, res, next) => {
 };
 
 export let getContract = async (req, res, next) => {
-    let ordercontractObj = await orderContractModel.find({ orderid:req.query.orderid });
+    let ordercontractObj = await orderContractModel.findOne({ orderid:req.query.orderid });
     if (ordercontractObj) {
         return res.json(ordercontractObj);
     }
@@ -102,7 +103,7 @@ export let getContract = async (req, res, next) => {
 
 export let createContract = async (req, res, next) => {
 
-    let contractid = "LJGJ_ORDER_CONTRACT" + req.body.phoneNo + "_" + moment(new Date()).format("YYYYMMDDHHmmss");//("YYYYMMDDHHmmss");
+    let contractid = "LJGJ_ORDER_CONTRACT_" +_.random(10000, 99999)+ "_" + moment(new Date()).format("YYYYMMDDHHmmss");//("YYYYMMDDHHmmss");
 
     let orderitem = new OrderContractModel({
         contractid: contractid,
@@ -146,6 +147,8 @@ export let createOrderReview = async (req, res, next) => {
 
 //获取订单列表
 export let getMyOrders = async (req, res, next) => {
+
+    let currentUser: User = req.user;
 
     let model = await orderModel.find();
     let shotOrders =  model.map(m => {
@@ -205,6 +208,32 @@ let getDiscountAmount = function(discoutnid,orderamount)
             }
         }
         break;
+        case "LJGJ_DICOUNT_Group_001":
+        {
+            if( Number(orderamount) > 3000)
+            {
+                disamount = -300;
+            }
+        }
+        break;
+        case "LJGJ_DICOUNT_Group_002":
+        {
+            disamount = -Number(orderamount)*0.9;
+        }
+        break;
+        case "LJGJ_DICOUNT_Group_003":
+        {
+            disamount = -Number(orderamount)*0.9;
+        }
+        break;
+        case "LJGJ_DICOUNT_Group_004":
+        {
+            if( Number(orderamount) > 1000)
+            {
+                disamount = -100;
+            }
+        }
+        break;
     }
     return disamount;
 }
@@ -218,26 +247,60 @@ export let getOrderInfo = async (req, res, next) => {
 
     let currentUser: User = req.user;
     
-    let model = await orderModel.findOne({orderid:req.body.orderid});
+    let model = await orderModel.findOne({ orderid:req.query.orderid});
+    if(model == null)
+    {
+        return res.json({
+            code:-1,
+            error: true,
+            message: "have no order ! "
+        });
+    }
 
     let service = await groupServiceModel.findOne({gServiceItemid: model.gServiceItemid});
-
-    let orderdicountobj = await orderDiscountModel.find({orderid: req.body.orderid});
     
-    let discounts =  orderdicountobj.map(m => {
+    let userDiscountList = currentUser.discountList;
 
-        let disamount = getDiscountAmount(m.discountid,model.orderAmount);
+    let usrdiscounts = [];//获取符合条件的折扣条目
+
+    if(model.isGroupOrder)
+    {
+        let groupDiscount = await discountModel.findOne({discountid: service.discountid});
+        
+        let disamount = getDiscountAmount(service.discountid,model.orderAmount);
+
         if(disamount<0)
         {
             let result = {
-                discountTitle:m.discountTitle,
+                discountTitle:groupDiscount.discountTitle,
                 discountAmount:disamount
             }
-            return result;
+            usrdiscounts.push(result);
         }
-    });
-
-    let orderWorkobj = await orderWorkModel.find({orderid: req.body.orderid});
+    }
+    else 
+    {
+        userDiscountList.forEach(
+            function(m,index)
+            {
+               if(m.projectid == model.projectid)
+                {
+                    let disamount = getDiscountAmount(m.discountid,model.orderAmount);
+                    if(disamount<0)
+                    {
+                        let result = {
+                            discountTitle:m.discountTitle,
+                            discountAmount:disamount
+                        }
+                        usrdiscounts.push(result);
+                    }
+                }
+            }
+        );
+    }
+ 
+    
+    let orderWorkobj = await orderWorkModel.find({ orderid:req.query.orderid});
 
     let orderworks =  orderWorkobj.map(m => {
             let result = {
@@ -250,8 +313,6 @@ export let getOrderInfo = async (req, res, next) => {
     );
 
     let result = {
-        code:0,
-        message:"",
         orderid: model.orderid,
         orderBaseInfo: 
         {
@@ -260,19 +321,24 @@ export let getOrderInfo = async (req, res, next) => {
             orderStatus:model.orderStatus,
             orderAddress:model.orderAddress
         },
-        groupOrderInfo: {
+        groupOrderInfo: model.isGroupOrder?{
             houseName: model.houseName,
             groupService: service.gServiceItemName,
             preAmount:model.preAmount
-        },
+        }:null,
         orderAmountInfo:
         {
             orderAmount:model.orderAmount,
             preAmount:model.preAmount,
-            orderDiscountList:discounts
+            orderDiscountList:usrdiscounts
         },
         orderWorkList:orderworks
     }
+    return res.json({
+        code: 0,
+        message: "OK",
+        data: result
+    });
 }
 
 export default { createOrder, getContract, createContract };

@@ -1,5 +1,6 @@
 import { prop, Typegoose, ModelType, InstanceType } from 'typegoose';
 import { Int32 } from 'bson';
+import { discount } from './discount.model';
 
 export class shotOrderItem {
 
@@ -74,7 +75,12 @@ export class OrderItem extends Typegoose {
   public craftsman: String;
 
   @prop()
+  public projectid: String;
+
+  @prop()
   public createdBy: String;
+
+
 }
 
 const OrderItemModel = new OrderItem().getModelForClass(OrderItem, {

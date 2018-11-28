@@ -9,6 +9,10 @@ export class groupService extends Typegoose {
 
     @prop()
     public gServiceItemName: string;
+
+    @prop()
+    public discountid: string;
+
 }
 
 var groupServiceModel = new groupService().getModelForClass(groupService, {

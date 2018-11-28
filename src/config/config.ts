@@ -64,11 +64,14 @@ export const config = {
     port: envVars.MONGO_PORT
   },
   wx: {
+    mchId: envVars.WX_MCH_ID,
+    mchKey: envVars.WX_MCH_KEY,
     appId: envVars.WX_APP_ID,
     appSecret: envVars.WX_APP_SECRET,
     loginUrl: envVars.WXLOGIN_URI,
     redirectUrl: encodeURIComponent(envVars.REDIRECT_URI),
     downloadUrl: envVars.DOWNLOAD_URI,
+    notifyUrl: envVars.NOTIFY_URI,
   },
   mysql: {
     host: envVars.MYSQL_HOST,
