@@ -61,7 +61,7 @@ export default {
     }
   },
   getOrderInfo: {
-    body: {
+    query: {
       orderid: Joi.string().required()
     }
   },
