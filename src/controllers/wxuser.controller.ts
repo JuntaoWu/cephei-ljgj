@@ -1,35 +1,20 @@
 import config from "../config/config";
 import * as jwt from 'jsonwebtoken';
+import { Request, Response, NextFunction } from "express";
+import APIError from "../helpers/APIError";
 
 export let authorize = (req, res, next) => {
-    return res.redirect(`https://open.weixin.qq.com/connect/oauth2/authorize?appid=${config.wx.appId}&redirect_uri=${config.wx.redirectUrl}&response_type=code&scope=snsapi_userinfo&state=${req.query.id}#wechat_redirect`);
+    return res.redirect(`https://open.weixin.qq.com/connect/oauth2/authorize?appid=${config.wx.appId}&redirect_uri=${config.wx.redirectUrl}&response_type=code&scope=snsapi_userinfo&state=${encodeURI(req.query.state)}#wechat_redirect`);
 };
 
-export let login = (req, res, next) => {
+export let login = (req: Request, res: Response, next: NextFunction) => {
     if (req.user) {
-        const token = jwt.sign({
-            userId: req.user.userId,
-            wxgameOpenId: req.user.wxgameOpenId,
-            nativeOpenId: req.user.nativeOpenId,
-            unionId: req.user.unionId  // if we do not have unionId here, the token will not be any use.
-        }, config.jwtSecret);
-
-        return res.json({
-            error: false,
-            message: "OK",
-            data: {
-                token,
-                userId: req.user.userId,
-                wxgameOpenId: req.user.wxgameOpenId,
-                nativeOpenId: req.user.nativeOpenId,
-                unionId: req.user.unionId,
-                session_key: req.user.session_key,
-                nickName: req.user.nickName,
-                avatarUrl: req.user.avatarUrl,
-                anonymous: req.user.anonymous,
-            }
-        });
+        res.cookie('wxOpenId', req.user.wxOpenId);
+        return res.redirect(decodeURI(req.query.state));
     }
+
+    const error = new APIError("Cannot resolve user info", 401);
+    return next(error);
 };
 
 export default { authorize, login };

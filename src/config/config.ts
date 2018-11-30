@@ -69,7 +69,7 @@ export const config = {
     appId: envVars.WX_APP_ID,
     appSecret: envVars.WX_APP_SECRET,
     loginUrl: envVars.WXLOGIN_URI,
-    redirectUrl: encodeURIComponent(envVars.REDIRECT_URI),
+    redirectUrl: encodeURI(envVars.REDIRECT_URI),
     downloadUrl: envVars.DOWNLOAD_URI,
     notifyUrl: envVars.NOTIFY_URI,
   },

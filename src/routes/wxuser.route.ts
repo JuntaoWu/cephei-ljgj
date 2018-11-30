@@ -11,7 +11,7 @@ const router = express.Router(); // eslint-disable-line new-cap
 router.route('/authorize')
     .get(wxuserCtrl.authorize);
 
-router.route('/redirect')
-    .post(passport.authenticate("localWx", { failWithError: true }), wxuserCtrl.login);
+router.route('/login')
+    .get(passport.authenticate("localWx", { failWithError: true }), wxuserCtrl.login);
 
 export default router;

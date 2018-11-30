@@ -102,7 +102,7 @@ const localWxLogin = new LocalStrategy(localWxOptions, async (username, password
         return null;
     });
 
-    if (user && user.unionId) {
+    if (user && user.wxOpenId) {
         return done(null, user);
     }
 
@@ -169,7 +169,25 @@ async function getWxUserInfoAsync(accessToken, openId) {
             wxRes.on("end", () => {
                 console.log(data);
                 let result = JSON.parse(data);
-                resolve(result);
+
+                let { openid, unionid, nickname, sex, province, city, country, headimgurl } = result;
+                if (!openid) {
+                    return reject(result);
+                }
+                else {
+                    let user = {
+                        wxOpenId: openid,
+                        unionId: unionid,
+                        nickName: nickname,
+                        gender: sex,
+                        province: province,
+                        city: city,
+                        country: country,
+                        avatarUrl: headimgurl,
+                    };
+
+                    return resolve(user);
+                }
             });
         });
         request.end();
