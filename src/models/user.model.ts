@@ -11,9 +11,6 @@ export class User extends Typegoose {
   public phoneNo?: Int32;
 
   @prop()
-  public wxOpenId?: String;
-
-  @prop()
   public uid?: String;
 
   @prop()

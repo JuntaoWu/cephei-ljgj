@@ -39,13 +39,7 @@ const localLogin = new LocalStrategy(localOptions, (req, username, password, don
                 message: "Your login details could not be verified. Please try again.",
             });
         }
-
-        let wxOpenId = req.query["wxOpenId"];
-        if (!user.wxOpenId && wxOpenId) {
-            user.wxOpenId = wxOpenId;
-            await user.save();
-        }
-
+        
         return done(null, user);
     });
 });

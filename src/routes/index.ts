@@ -8,10 +8,11 @@ import orderRouter from './order.route';
 import projectsRouter from './projects.route';
 import groupRouter from './group.route';
 import wxuserRouter from './wxuser.route';
+import paymentRouter from './payment.route';
 import passport from 'passport';
 
 /* GET home page. */
-router.get('/', function(req, res, next) {
+router.get('/', function (req, res, next) {
   res.render('index', { title: 'Express' });
 });
 
@@ -30,5 +31,7 @@ router.use('/projects', projectsRouter);
 router.use('/group', groupRouter);
 
 router.use('/wxuser', wxuserRouter);
+
+router.use('/payments', paymentRouter);
 
 export default router;
