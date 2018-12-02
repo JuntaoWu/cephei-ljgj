@@ -7,6 +7,7 @@ import postRouter from './post.route';
 import orderRouter from './order.route';
 import projectsRouter from './projects.route';
 import groupRouter from './group.route';
+import wxuserRouter from './wxuser.route';
 import passport from 'passport';
 
 /* GET home page. */
@@ -27,5 +28,7 @@ router.use('/level', levelRouter);
 router.use('/projects', projectsRouter);
 
 router.use('/group', groupRouter);
+
+router.use('/wxuser', wxuserRouter);
 
 export default router;

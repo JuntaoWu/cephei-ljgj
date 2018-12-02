@@ -1,6 +1,6 @@
 {
-  "name": "tk2048",
-  "version": "0.5.1",
+  "name": "cephei-ljgj",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
     "build:sw": "node ./workbox-generate.js",
@@ -38,7 +38,7 @@
     "lusca": "^1.5.2",
     "moment": "^2.22.2",
     "mongoose": "^5.2.4",
-    "morgan": "~1.9.0",
+    "morgan": "^1.9.1",
     "multer": "^1.4.0",
     "nodemailer": "^4.4.1",
     "passport": "^0.4.0",
@@ -52,6 +52,7 @@
     "request-promise": "^4.2.2",
     "speakeasy": "^2.0.0",
     "typegoose": "^5.2.1",
+    "uuid": "^3.3.2",
     "winston": "^2.4.0"
   },
   "devDependencies": {
@@ -89,6 +90,7 @@
     "@types/shelljs": "^0.7.8",
     "@types/speakeasy": "^2.0.2",
     "@types/supertest": "^2.0.4",
+    "@types/uuid": "^3.4.4",
     "@types/winston": "^2.3.7",
     "typescript": "^2.9.2",
     "workbox-build": "^3.2.0"
