@@ -30,6 +30,8 @@ const envVarsSchema = Joi.object({
     .description('WeChat AppId'),
   WX_APP_SECRET: Joi.string().required()
     .description('WeChat AppSecret'),
+  WX_SANDBOX: Joi.boolean().default(false)
+    .description('Wechat Payment Sandbox'),
   WXLOGIN_URI: Joi.string().required()
     .description('WeChat LoginUri'),
   REDIRECT_URI: Joi.string().required()
@@ -72,6 +74,7 @@ export const config = {
     redirectUrl: encodeURI(envVars.REDIRECT_URI),
     downloadUrl: envVars.DOWNLOAD_URI,
     notifyUrl: envVars.NOTIFY_URI,
+    sandbox: envVars.WX_SANDBOX,
   },
   mysql: {
     host: envVars.MYSQL_HOST,

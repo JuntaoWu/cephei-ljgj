@@ -51,12 +51,15 @@ app.use(function (req, res, next) {
 
 // error handler
 app.use((err: any, req: any, res: any, next: any) => {
+  console.error(err);
+
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
   // render the error page
   res.status(err.status || 500);
+  
   if (err && err.errors && err.errors.length) {
     const message = _(err.errors).flatMap(m => m.messages).join("\n");
     return res.json({

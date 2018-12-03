@@ -14,4 +14,9 @@ router.route('/createUnifiedOrder')
         validate(paramValidation.createUnifiedOrder),
         paymentCtrl.createUnifiedOrder);
 
+router.route('/getWxSignature')
+    .post(passport.authenticate("jwt", { failWithError: true }),
+        validate(paramValidation.getWxSignature),
+        paymentCtrl.getWxSignature);
+
 export default router;

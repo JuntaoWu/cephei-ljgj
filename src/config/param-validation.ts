@@ -112,6 +112,15 @@ export default {
             wxOpenId: Joi.string().required(),
             orderId: Joi.string().required(),
         }
+    },
+    // POST /api/payment/getWxSignature
+    getWxSignature: {
+        body: {
+            payload: Joi.array().items(Joi.object({
+                key: Joi.string(),
+                value: Joi.alternatives().try(Joi.string(), Joi.number())
+            }))
+        }
     }
 
 };
