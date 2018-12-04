@@ -9,6 +9,11 @@ import paramValidation from '../config/param-validation';
 
 const router = express.Router(); // eslint-disable-line new-cap
 
+router.route('/createWxConfig')
+    .post(passport.authenticate("jwt", { failWithError: true }),
+        validate(paramValidation.createWxConfig),
+        paymentCtrl.createWxConfig);
+
 router.route('/createUnifiedOrder')
     .post(passport.authenticate("jwt", { failWithError: true }),
         validate(paramValidation.createUnifiedOrder),

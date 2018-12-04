@@ -113,6 +113,12 @@ export default {
             orderId: Joi.string().required(),
         }
     },
+    // POST /api/payment/createWxConfig
+    createWxConfig: {
+        body: {
+            url: Joi.string().required(),
+        }
+    },
     // POST /api/payment/getWxSignature
     getWxSignature: {
         body: {
