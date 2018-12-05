@@ -150,7 +150,7 @@ export let getMyOrders = async (req, res, next) => {
 
     let currentUser: User = req.user;
 
-    let model = await orderModel.find();
+    let model = await orderModel.find( {createdBy : currentUser.phoneNo});
     let shotOrders =  model.map(m => {
         let result = new shotOrderItem();
         result.orderid = m.orderid;
