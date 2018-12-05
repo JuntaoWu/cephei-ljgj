@@ -32,6 +32,6 @@ router.use('/group', groupRouter);
 
 router.use('/wxuser', wxuserRouter);
 
-router.use('/payments', paymentRouter);
+router.use('/payment', paymentRouter);
 
 export default router;

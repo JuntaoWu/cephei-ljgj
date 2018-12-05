@@ -7,6 +7,10 @@ import moment from 'moment';
 import { createHmac, createHash } from 'crypto';
 import X2JS from 'x2js';
 import { getJsApiTicket } from '../helpers/ticket';
+import { Request, Response, NextFunction } from 'express';
+import _ from 'lodash';
+import PaymentModel, { Payment, PaymentStatus } from '../models/payment.model';
+import OrderItemModel, { OrderStatus } from '../models/order.model';
 
 const x2js = new X2JS();
 
@@ -55,6 +59,37 @@ export let createUnifiedOrder = async (req, res, next) => {
         return next(err);
     }
 
+    // check whether the order had been paid or not.
+    let orderItem = await OrderItemModel.findOne({
+        orderid: req.body.orderId
+    });
+    if (!orderItem || orderItem.orderStatus != OrderStatus.Preparing || orderItem.orderStatus != OrderStatus.InProgress) {
+        // Cannot find proper orderItem to pay.
+        const err = new APIError('Unable to find orderItem', httpStatus.NOT_FOUND, true);
+        return next(err);
+    }
+
+    let existingPayments = await PaymentModel.find({
+        orderId: req.body.orderId,
+    });
+
+    let paidAlready = _(existingPayments.filter(i => i.status == PaymentStatus.Completed)).sumBy("totalFee");
+    let totalFee = (+orderItem.orderAmount * 100);
+    let remainTotalFee = totalFee - paidAlready;
+
+    if (remainTotalFee <= 0) {
+        // Cannot find proper orderItem to pay.
+        const err = new APIError('Total fee is 0.', httpStatus.NOT_FOUND, true);
+        return next(err);
+    }
+
+    let waitingPayment = existingPayments.filter(i => i.status == PaymentStatus.Waiting).find(i => i.totalFee == remainTotalFee);
+
+    let outTradeNo = `${orderItem.orderid}-${existingPayments.length}`;
+    if (waitingPayment) {
+        outTradeNo = waitingPayment.outTradeNo.toString();
+    }
+
     const reqIP = req.headers['x-forwarded-for'] ||
         req.connection.remoteAddress ||
         req.socket.remoteAddress ||
@@ -70,13 +105,13 @@ export let createUnifiedOrder = async (req, res, next) => {
     data.push({ key: 'nonce_str', value: nonceStr });
     data.push({ key: 'body', value: "邻家工匠-订单支付" });
     data.push({ key: 'detail', value: "detail" });
-    data.push({ key: 'out_trade_no', value: req.body.orderId });
+    data.push({ key: 'out_trade_no', value: outTradeNo });
     data.push({ key: 'fee_type', value: "CNY" });
-    data.push({ key: 'total_fee', value: req.body.orderAmount || 1 });
+    data.push({ key: 'total_fee', value: remainTotalFee });
     data.push({ key: 'spbill_create_ip', value: reqIP });
     data.push({ key: 'time_start', value: timeStart });
     data.push({ key: 'time_expire', value: timeExpire });
-    data.push({ key: 'goods_tag', value: "goods1" });
+    data.push({ key: 'goods_tag', value: orderItem.gServiceItemid });
     data.push({ key: 'notify_url', value: config.wx.notifyUrl });
     data.push({ key: 'trade_type', value: "JSAPI" });
     data.push({ key: 'openid', value: wxOpenId });
@@ -101,11 +136,183 @@ export let createUnifiedOrder = async (req, res, next) => {
         return next(err);
     }
 
+    // save the current payment in db.
+    const payment = new PaymentModel({
+        appId: config.wx.appId,
+        feeType: "CNY",
+        mchId: config.wx.mchId,
+        openId: wxOpenId,
+        outTradeNo: outTradeNo,
+        totalFee: remainTotalFee,
+        tradeType: "JSAPI",
+        status: PaymentStatus.Waiting,
+    });
+    await payment.save();
+
     return res.json({
         code: 0,
         message: "OK",
         data: paymentParams
     });
+};
+
+export let wxNotify = async (req: Request, res: Response, next: NextFunction) => {
+    /**
+     * <xml>
+        <appid><![CDATA[wx2421b1c4370ec43b]]></appid>
+        <attach><![CDATA[支付测试]]></attach>
+        <bank_type><![CDATA[CFT]]></bank_type>
+        <fee_type><![CDATA[CNY]]></fee_type>
+        <is_subscribe><![CDATA[Y]]></is_subscribe>
+        <mch_id><![CDATA[10000100]]></mch_id>
+        <nonce_str><![CDATA[5d2b6c2a8db53831f7eda20af46e531c]]></nonce_str>
+        <openid><![CDATA[oUpF8uMEb4qRXf22hE3X68TekukE]]></openid>
+        <out_trade_no><![CDATA[1409811653]]></out_trade_no>
+        <result_code><![CDATA[SUCCESS]]></result_code>
+        <return_code><![CDATA[SUCCESS]]></return_code>
+        <sign><![CDATA[B552ED6B279343CB493C5DD0D78AB241]]></sign>
+        <sub_mch_id><![CDATA[10000100]]></sub_mch_id>
+        <time_end><![CDATA[20140903131540]]></time_end>
+        <total_fee>1</total_fee>
+        <coupon_fee_0><![CDATA[10]]></coupon_fee_0>
+        <coupon_count><![CDATA[1]]></coupon_count>
+        <coupon_type><![CDATA[CASH]]></coupon_type>
+        <coupon_id><![CDATA[10000]]></coupon_id> 
+        <trade_type><![CDATA[JSAPI]]></trade_type>
+        <transaction_id><![CDATA[1004400740201409030005092168]]></transaction_id>
+        </xml>
+     */
+    if (req.body) {
+        try {
+            const result = x2js.xml2js(req.body) as any;
+            if (!result || !result.xml) {
+                console.error("wxNotify", result);
+                const err = new APIError("Notify format error, failed.", httpStatus.FORBIDDEN);
+                return next(err);
+            }
+
+            // todo: checkSign
+            const {
+                appid, attach, bank_type, fee_type, is_subscribe,
+                mch_id, nonce_str, openid,
+                out_trade_no,
+                result_code, return_code, sign, sub_mch_id, time_end,
+                total_fee, settlement_total_fee, cash_fee,
+                coupon_fee,
+                coupon_count,
+                coupon_type,
+                coupon_id,
+                trade_type, transaction_id,
+                err_code, err_code_des,
+            } = result.xml;
+
+            let returnData =
+                `<xml>
+                    <return_code><![CDATA[SUCCESS]]></return_code>
+                    <return_msg><![CDATA[OK]]></return_msg>
+                </xml>`;
+
+            if (return_code != "SUCCESS") {
+                // todo: payment failed.
+                console.log(result.return_msg);
+                return res.end(returnData);
+            }
+
+            let payment = await PaymentModel.findOne({ outTradeNo: out_trade_no })
+                .catch(error => {
+                    console.error(error);
+                    return undefined;
+                });
+
+            if (payment && (payment.status == PaymentStatus.Completed || payment.status == PaymentStatus.Closed)) {
+                return res.end(returnData);
+            }
+
+            const data = _.entries(result.xml).filter(pair => pair[0] !== "sign").map(pair => {
+                return { key: pair[0], value: pair[1] };
+            });
+            let signature: string;
+            if (config.wx.sandbox) {
+                let sandboxKey = await getSandboxKeyAsync();
+                signature = getSignature(data, sandboxKey);
+            }
+            else {
+                // todo: for production use only.
+                signature = getSignature(data, config.wx.mchKey);
+            }
+
+            if (signature == sign) {
+                // todo: save business data.
+                if (!payment) {
+                    payment = new PaymentModel({
+                        appId: appid,
+                        attach: attach,
+                        bankType: bank_type,
+                        feeType: fee_type,
+                        isSuscribe: is_subscribe,
+                        mchId: mch_id,
+                        nonceStr: nonce_str,
+                        openId: openid,
+                        outTradeNo: out_trade_no,
+                        subMchId: sub_mch_id,
+                        timeEnd: time_end,
+                        totalFee: total_fee,
+                        settlementTotalFee: settlement_total_fee,
+                        cashFee: cash_fee,
+                        couponFee: coupon_fee,
+                        couponCount: coupon_count,
+                        couponType: coupon_type,
+                        couponId: coupon_id,
+                        tradeType: trade_type,
+                        transactionId: transaction_id,
+                        status: result_code == "SUCCESS" ? PaymentStatus.Completed : PaymentStatus.Exception,
+                        errCode: err_code,
+                        errCodeDes: err_code_des,
+                    });
+                }
+                else {
+                    if (payment.totalFee != total_fee || result_code != "SUCCESS") {
+                        payment.status = PaymentStatus.Exception;
+                    }
+                    else {
+                        payment.status = PaymentStatus.Completed;
+                    }
+                    payment.attach = attach;
+                    payment.bankType = bank_type;
+                    payment.feeType = fee_type;
+                    payment.isSubscribe = is_subscribe;
+                    payment.nonceStr = nonce_str;
+                    payment.openId = openid;
+                    payment.timeEnd = time_end;
+                    payment.totalFee = total_fee;
+                    payment.settlementTotalFee = settlement_total_fee;
+                    payment.cashFee = cash_fee;
+                    payment.couponFee = coupon_fee;
+                    payment.couponCount = coupon_count;
+                    payment.couponType = coupon_type;
+                    payment.couponId = coupon_id;
+                    payment.tradeType = trade_type;
+                    payment.transactionId = transaction_id;
+                    payment.errCode = err_code;
+                    payment.errCodeDes = err_code_des;
+                }
+                await payment.save();
+                return res.end(returnData);
+            }
+            else {
+                console.error("Check Signature failed.");
+                const err = new APIError("Check Signature failed.", httpStatus.FORBIDDEN);
+                return next(err);
+            }
+        }
+        catch (error) {
+            console.error(error);
+            const err = new APIError("handle wxNotify error.", httpStatus.INTERNAL_SERVER_ERROR);
+            return next(err);
+        }
+    }
+
+    return res.end();
 };
 
 function getSignature(data: any[], apiKey: string, signType: string = "HMAC-SHA256") {
@@ -333,4 +540,4 @@ export let getWxSignature = async (req, res, next) => {
     });
 };
 
-export default { createWxConfig, createUnifiedOrder, getWxSignature };
+export default { createWxConfig, createUnifiedOrder, getWxSignature, wxNotify };

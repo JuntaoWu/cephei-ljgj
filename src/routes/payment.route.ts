@@ -24,4 +24,7 @@ router.route('/getWxSignature')
         validate(paramValidation.getWxSignature),
         paymentCtrl.getWxSignature);
 
+router.route('/wxNotify')
+    .post(paymentCtrl.wxNotify);
+
 export default router;

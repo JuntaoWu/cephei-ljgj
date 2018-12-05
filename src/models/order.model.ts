@@ -15,18 +15,34 @@ export class shotOrderItem {
   public orderStatus: String;
 
   public orderAmount: String;
-  
+
   public craftsman: String;
 
 }
 
+export type OrderStatus = "审核中" | "准备中" | "施工中" | "已完成" | "已取消";
+export const OrderStatus = {
+  Initializing: "审核中" as OrderStatus,
+  Preparing: "准备中" as OrderStatus,
+  InProgress: "施工中" as OrderStatus,
+  Completed: "已完成" as OrderStatus,
+  Canceled: "已取消" as OrderStatus
+};
 
+export type OrderPaymentStatus = "待支付" | "已预付款项" | "已支付" | "异常";
+export const OrderPaymentStatus = {
+  Waiting: "待支付" as OrderPaymentStatus,
+  Prepaid: "已预付款项" as OrderPaymentStatus,
+  Completed: "已支付" as OrderPaymentStatus,
+  Exception: "异常" as OrderPaymentStatus,
+};
 
 /**
  * Post Schema
  */
 export class OrderItem extends Typegoose {
-  @prop()
+
+  @prop({ unique: true })
   public orderid: String;
 
   @prop()
@@ -63,14 +79,14 @@ export class OrderItem extends Typegoose {
   public orderTime: String;
 
   @prop()
-  public orderStatus: String;
+  public orderStatus: OrderStatus;
 
   @prop()
   public orderAmount: String;
 
   @prop()
-  public  preAmount: String;
-  
+  public preAmount: String;
+
   @prop()
   public craftsman: String;
 
@@ -78,8 +94,10 @@ export class OrderItem extends Typegoose {
   public projectid: String;
 
   @prop()
-  public createdBy: String;
+  public paymentStatus?: OrderPaymentStatus;
 
+  @prop()
+  public createdBy: String;
 
 }
 
