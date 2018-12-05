@@ -20,12 +20,14 @@ app.set('view engine', 'jade');
 // parse body params and attache them to req.body
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.text({
+  defaultCharset: "utf-8",
+  type: "text/*"
+}));
 
 app.use(cors());
 
 app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, '../public'), {
   setHeaders: function (res, path) {
@@ -59,7 +61,7 @@ app.use((err: any, req: any, res: any, next: any) => {
 
   // render the error page
   res.status(err.status || 500);
-  
+
   if (err && err.errors && err.errors.length) {
     const message = _(err.errors).flatMap(m => m.messages).join("\n");
     return res.json({
