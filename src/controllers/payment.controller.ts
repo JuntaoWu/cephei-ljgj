@@ -97,8 +97,8 @@ export let createUnifiedOrder = async (req, res, next) => {
 
     let data = [];
     let nonceStr = uuid().replace(/-/g, '');
-    let timeStart = moment().format("YYYYMMDDHHmm");
-    let timeExpire = moment().add(15, "minutes").format("YYYYMMDDHHmm");
+    let timeStart = moment().format("YYYYMMDDHHmmss");
+    let timeExpire = moment().add(15, "minutes").format("YYYYMMDDHHmmss");
     data.push({ key: 'appid', value: config.wx.appId });
     data.push({ key: 'mch_id', value: config.wx.mchId });
     data.push({ key: 'device_info', value: 'WEB' });
