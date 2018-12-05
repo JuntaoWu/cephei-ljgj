@@ -51,7 +51,7 @@ export let createOrder = async (req, res, next) => {
         username: currentUser.username
     }, config.jwtSecret);
 
-    let orderid = "LJGJ_ORDER_" + _.random(10000, 99999) + "_" + moment(new Date()).format("YYYYMMDDHHmmss");//("YYYYMMDDHHmmss");
+    let orderid = "ORDER_" + _.random(10000, 99999) + "_" + moment(new Date()).format("YYYYMMDDHHmm");//("YYYYMMDDHHmm");
     let orderitem = new orderModel({
         orderid: orderid,
         phoneNo: req.body.phoneNo,
@@ -103,7 +103,7 @@ export let getContract = async (req, res, next) => {
 
 export let createContract = async (req, res, next) => {
 
-    let contractid = "LJGJ_ORDER_CONTRACT_" + _.random(10000, 99999) + "_" + moment(new Date()).format("YYYYMMDDHHmmss");//("YYYYMMDDHHmmss");
+    let contractid = "ORDER_CONTRACT_" + _.random(10000, 99999) + "_" + moment(new Date()).format("YYYYMMDDHHmm");//("YYYYMMDDHHmm");
 
     let orderitem = new OrderContractModel({
         contractid: contractid,
@@ -124,7 +124,7 @@ export let createContract = async (req, res, next) => {
 
 export let createOrderReview = async (req, res, next) => {
 
-    let reviewid = "LJGJ_Order_Reivew" + req.body.phoneNo + "_" + moment(new Date()).format("YYYYMMDDHHmmss");//("YYYYMMDDHHmmss");
+    let reviewid = "ORDER_Reivew" + req.body.phoneNo + "_" + moment(new Date()).format("YYYYMMDDHHmm");//("YYYYMMDDHHmm");
 
     let orderitem = new OrderReivewModel({
         reviewid: reviewid,

@@ -97,8 +97,8 @@ export let createUnifiedOrder = async (req, res, next) => {
 
     let data = [];
     let nonceStr = uuid().replace(/-/g, '');
-    let timeStart = moment().format("YYYYMMDDHHmmss");
-    let timeExpire = moment().add(15, "minutes").format("YYYYMMDDHHmmss");
+    let timeStart = moment().format("YYYYMMDDHHmm");
+    let timeExpire = moment().add(15, "minutes").format("YYYYMMDDHHmm");
     data.push({ key: 'appid', value: config.wx.appId });
     data.push({ key: 'mch_id', value: config.wx.mchId });
     data.push({ key: 'device_info', value: 'WEB' });
@@ -122,6 +122,17 @@ export let createUnifiedOrder = async (req, res, next) => {
     });
 
     if (!result || !result.prepay_id) {
+
+        if (result && result.err_code == "ORDERPAID") {
+            // now change paymentModel's status.
+            // todo: check the sign.
+            let payment = await PaymentModel.findOne({ outTradeNo: outTradeNo });
+            payment.status = PaymentStatus.Completed;
+            // even we know it's paid already, but since we missed out the wxNotify, so we cannot track this payment anymore.
+            // todo: actively query wx payment via wxapi.
+            await payment.save();
+        }
+
         const err = new APIError('requestUnifiedOrder error', httpStatus.INTERNAL_SERVER_ERROR, true);
         return next(err);
     }
@@ -184,6 +195,7 @@ export let wxNotify = async (req: Request, res: Response, next: NextFunction) =>
      */
     if (req.body) {
         try {
+            console.log("wxNotify body:", req.body);
             const result = x2js.xml2js(req.body) as any;
             if (!result || !result.xml) {
                 console.error("wxNotify", result);

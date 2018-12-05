@@ -76,9 +76,9 @@ export let getGroupServiceItems = async () => {
  */
 export let createOneGroupItem = async (req, res, next) => {
 
-    let groupid = "LJGJ_GROUP_ID_" + "_" + moment(new Date()).format("YYYYMMDDHHmmss");//("YYYYMMDDHHmmss");
+    let groupid = "LJGJ_GROUP_ID_" + "_" + moment(new Date()).format("YYYYMMDDHHmm");//("YYYYMMDDHHmm");
 
-    let houseid = "LJGJ_House_ID_" + "_" + moment(new Date()).format("YYYYMMDDHHmmss");//("YYYYMMDDHHmmss");
+    let houseid = "LJGJ_House_ID_" + "_" + moment(new Date()).format("YYYYMMDDHHmm");//("YYYYMMDDHHmm");
 
     let groupServiceList = await getGroupServiceItems();
 
