@@ -153,6 +153,7 @@ export let createUnifiedOrder = async (req, res, next) => {
         feeType: "CNY",
         mchId: config.wx.mchId,
         openId: wxOpenId,
+        orderId: orderItem.orderid,
         outTradeNo: outTradeNo,
         totalFee: remainTotalFee,
         tradeType: "JSAPI",
