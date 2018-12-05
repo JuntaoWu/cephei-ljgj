@@ -63,7 +63,7 @@ export let createUnifiedOrder = async (req, res, next) => {
     let orderItem = await OrderItemModel.findOne({
         orderid: req.body.orderId
     });
-    if (!orderItem || orderItem.orderStatus != OrderStatus.Preparing || orderItem.orderStatus != OrderStatus.InProgress) {
+    if (!orderItem || (orderItem.orderStatus != OrderStatus.Preparing && orderItem.orderStatus != OrderStatus.InProgress)) {
         // Cannot find proper orderItem to pay.
         const err = new APIError('Unable to find orderItem', httpStatus.NOT_FOUND, true);
         return next(err);

@@ -1,6 +1,5 @@
 import { prop, Typegoose, ModelType, InstanceType } from 'typegoose';
 import { Int32 } from 'bson';
-import { discount } from './discount.model';
 
 export class shotOrderItem {
 
@@ -12,30 +11,31 @@ export class shotOrderItem {
 
   public orderTime: String;
 
-  public orderStatus: String;
+  public orderStatus: OrderStatus;
 
-  public orderAmount: String;
+  public orderAmount: Number;
 
   public craftsman: String;
 
+  public paymentStatus: OrderPaymentStatus;
+
 }
 
-export type OrderStatus = "审核中" | "准备中" | "施工中" | "已完成" | "已取消";
-export const OrderStatus = {
-  Initializing: "审核中" as OrderStatus,
-  Preparing: "准备中" as OrderStatus,
-  InProgress: "施工中" as OrderStatus,
-  Completed: "已完成" as OrderStatus,
-  Canceled: "已取消" as OrderStatus
-};
+export enum OrderStatus {
+  Initializing = 1,
+  Preparing = 2,
+  InProgress = 3,
+  Completed = 4,
+  Canceled = 5,
+}
 
-export type OrderPaymentStatus = "待支付" | "已预付款项" | "已支付" | "异常";
-export const OrderPaymentStatus = {
-  Waiting: "待支付" as OrderPaymentStatus,
-  Prepaid: "已预付款项" as OrderPaymentStatus,
-  Completed: "已支付" as OrderPaymentStatus,
-  Exception: "异常" as OrderPaymentStatus,
-};
+export enum OrderPaymentStatus {
+  Initializing = 1,
+  Waiting = 2,
+  Completed = 3,
+  Closed = 4,
+  Exception = 5,
+}
 
 /**
  * Post Schema
@@ -82,10 +82,13 @@ export class OrderItem extends Typegoose {
   public orderStatus: OrderStatus;
 
   @prop()
-  public orderAmount: String;
+  public orderAmount: Number;
 
   @prop()
-  public preAmount: String;
+  public preAmount: Number;
+
+  @prop()
+  public paidAmount: Number;
 
   @prop()
   public craftsman: String;
@@ -93,7 +96,7 @@ export class OrderItem extends Typegoose {
   @prop()
   public projectid: String;
 
-  @prop()
+  @prop({ default: OrderPaymentStatus.Initializing })
   public paymentStatus?: OrderPaymentStatus;
 
   @prop()

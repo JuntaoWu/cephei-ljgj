@@ -15,13 +15,13 @@ import _ from 'lodash';
     coupon_id,
     trade_type, transaction_id
  */
-export type PaymentStatus = "待支付" | "已关闭" | "已支付" | "异常";
-export const PaymentStatus = {
-    Waiting: "待支付" as PaymentStatus,
-    Closed: "已关闭" as PaymentStatus,
-    Completed: "已支付" as PaymentStatus,
-    Exception: "异常" as PaymentStatus,
-};
+export enum PaymentStatus {
+    Initializing = 1,
+    Waiting = 2,
+    Completed = 3,
+    Closed = 4,
+    Exception = 5,
+}
 
 @pre<Payment>("save", async function (next, doc?: InstanceType<Payment>) {
     // update orderItem paymentStatus field based on this payment's status.
@@ -39,9 +39,8 @@ export const PaymentStatus = {
             // todo: 
             orderItem.paymentStatus = OrderPaymentStatus.Completed;
         }
-        else {
-            orderItem.paymentStatus = OrderPaymentStatus.Prepaid;
-        }
+
+        orderItem.paidAmount = orderAmount - (paidFee + (+this.totalFee));
     }
     else if (this.status == PaymentStatus.Waiting && !orderItem.paymentStatus) {
         orderItem.paymentStatus = OrderPaymentStatus.Waiting;
