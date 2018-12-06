@@ -216,19 +216,21 @@ export let createUnifiedOrder = async (req, res, next) => {
         return next(err);
     }
 
-    // save the current payment in db.
-    const payment = new PaymentModel({
-        appId: config.wx.appId,
-        feeType: "CNY",
-        mchId: config.wx.mchId,
-        openId: wxOpenId,
-        orderId: orderItem.orderid,
-        outTradeNo: outTradeNo,
-        totalFee: remainTotalFee,
-        tradeType: tradeType,
-        status: PaymentStatus.Waiting,
-    });
-    await payment.save();
+    if (!waitingPayment) {
+        // save the current payment in db.
+        const payment = new PaymentModel({
+            appId: config.wx.appId,
+            feeType: "CNY",
+            mchId: config.wx.mchId,
+            openId: wxOpenId,
+            orderId: orderItem.orderid,
+            outTradeNo: outTradeNo,
+            totalFee: remainTotalFee,
+            tradeType: tradeType,
+            status: PaymentStatus.Waiting,
+        });
+        await payment.save();
+    }
 
     return res.json({
         code: 0,
