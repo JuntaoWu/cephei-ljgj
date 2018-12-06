@@ -111,6 +111,7 @@ export default {
         body: {
             wxOpenId: Joi.string().required(),
             orderId: Joi.string().required(),
+            tradeType: Joi.string().allow("JSAPI", "MWEB").default("JSAPI")
         }
     },
     // POST /api/payment/createWxConfig

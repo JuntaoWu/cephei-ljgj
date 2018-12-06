@@ -18,11 +18,14 @@ app.set('views', path.join(__dirname, '../views'));
 app.set('view engine', 'jade');
 
 // parse body params and attache them to req.body
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json({
+  type: '*/json'
+}));
 app.use(bodyParser.text({
-  defaultCharset: "utf-8",
   type: "text/*"
+}));
+app.use(bodyParser.urlencoded({
+  extended: true
 }));
 
 app.use(cors());
