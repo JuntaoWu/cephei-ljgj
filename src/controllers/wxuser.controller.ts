@@ -11,13 +11,13 @@ export let login = (req: Request, res: Response, next: NextFunction) => {
     if (req.user) {
         res.cookie('wxOpenId', req.user.wxOpenId);
         let redirectUrl = decodeURI(req.query.state);
-        if(/\?/.test(redirectUrl)) {
+        if (/\?/.test(redirectUrl)) {
             redirectUrl += `&wxOpenId=${req.user.wxOpenId}`;
         }
         else {
             redirectUrl += `?wxOpenId=${req.user.wxOpenId}`;
         }
-        
+        console.log('redirectTo:', redirectUrl);
         return res.redirect(redirectUrl);
     }
 
