@@ -10,7 +10,15 @@ export let authorize = (req, res, next) => {
 export let login = (req: Request, res: Response, next: NextFunction) => {
     if (req.user) {
         res.cookie('wxOpenId', req.user.wxOpenId);
-        return res.redirect(decodeURI(req.query.state));
+        let redirectUrl = decodeURI(req.query.state);
+        if(/\?/.test(redirectUrl)) {
+            redirectUrl += `&wxOpenId=${req.user.wxOpenId}`;
+        }
+        else {
+            redirectUrl += `?wxOpenId=${req.user.wxOpenId}`;
+        }
+        
+        return res.redirect(redirectUrl);
     }
 
     const error = new APIError("Cannot resolve user info", 401);
