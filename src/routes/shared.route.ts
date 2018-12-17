@@ -7,12 +7,12 @@ import validate from 'express-validation';
 
 const router = express.Router();
 
-router.post('/',
+router.post('/order',
     validate(paramValidation.getSharedOrders),
     passport.authenticate("jwtService"),
     sharedCtrl.list);
 
-router.get('/:orderId',
+router.get('/order/:orderId',
     validate(paramValidation.getSharedOrderDetail),
     passport.authenticate("jwtService"),
     sharedCtrl.load);
