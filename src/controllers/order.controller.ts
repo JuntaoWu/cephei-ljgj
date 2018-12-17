@@ -4,7 +4,7 @@ import APIError from '../helpers/APIError';
 import config from '../config/config';
 
 import { Request, Response } from 'express';
-import orderModel, { OrderItem, shotOrderItem } from '../models/order.model';
+import orderModel, { OrderItem, shotOrderItem, OrderStatus } from '../models/order.model';
 import orderContractModel, { OrderContract } from '../models/orderContract.model';
 
 import UserModel, { User } from '../models/user.model';
@@ -66,9 +66,9 @@ export let createOrder = async (req, res, next) => {
         orderDescription: req.body.orderDescription ? req.body.orderDescription : "无",
         gServiceItemid: req.body.gServiceItemid ? req.body.gServiceItemid : "无",
         orderThumbUrl: "",
-        orderStatus: 1,
+        orderStatus: OrderStatus.Preparing,
         orderTime: moment(new Date()).format("YYYY-MM-DD HH:mm:ss"),//req.body.createTime,
-        orderAmount: "审核中...",
+        orderAmount: 0.02,  // todo: change to undefined.
         craftsman: "",
         createdBy: currentUser.username,
     });
