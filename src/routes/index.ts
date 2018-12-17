@@ -9,7 +9,7 @@ import projectsRouter from './projects.route';
 import groupRouter from './group.route';
 import wxuserRouter from './wxuser.route';
 import paymentRouter from './payment.route';
-import passport from 'passport';
+import sharedRouter from './shared.route';
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
@@ -33,5 +33,7 @@ router.use('/group', groupRouter);
 router.use('/wxuser', wxuserRouter);
 
 router.use('/payment', paymentRouter);
+
+router.use('/shared', sharedRouter);
 
 export default router;

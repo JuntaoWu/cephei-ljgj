@@ -188,6 +188,26 @@ async function getWxUserInfoAsync(accessToken, openId) {
     });
 }
 
+// Setting JWT strategy options
+const jwtServiceOptions = {
+    // Telling Passport to check authorization headers for JWT
+    jwtFromRequest: ExtractJwt.fromUrlQueryParameter("token"),
+    // Telling Passport where to find the secret
+    secretOrKey: config.service.jwtSecret
+    // TO-DO: Add issuer and audience checks
+};
+
+const jwtServiceLogin = new JwtStrategy(jwtServiceOptions, (payload, done) => {
+    console.log("jwt service payload ", payload);
+    if (!payload.service || payload.peerName != config.service.name) {
+        return done(null, false);
+    }
+
+    return done(null, {
+        service: payload.service,
+    });
+});
+
 (passport as any).default.serializeUser(function (user, done) {
     done(null, user);
 });
@@ -200,5 +220,6 @@ async function getWxUserInfoAsync(accessToken, openId) {
 (passport as any).default.use("local", localLogin);
 (passport as any).default.use("anonymous", anonymousLogin);
 (passport as any).default.use("localWx", localWxLogin);
+(passport as any).default.use("jwtService", jwtServiceLogin);
 
 export default passport;
