@@ -7,11 +7,18 @@ dotenv.config();
 
 // define validation for all the env vars
 const envVarsSchema = Joi.object({
+  SERVICE_NAME: Joi.string().required(),
+  SERVICE_PEER_NAME: Joi.string().required(),
+  SERVICE_PEER_HOST: Joi.string().required(),
+  SERVICE_PEER_PORT: Joi.number().required(),
+  SERVICE_JWT_SECRET: Joi.string().required(),
   NODE_ENV: Joi.string()
     .allow(['development', 'production', 'test', 'provision'])
     .default('development'),
   SERVER_PORT: Joi.number()
     .default(4040),
+  SSL_SERVER_PORT: Joi.number()
+    .default(40400),
   MONGOOSE_DEBUG: Joi.boolean()
     .when('NODE_ENV', {
       is: Joi.string().equal('development'),
@@ -57,8 +64,16 @@ if (error) {
 }
 
 export const config = {
+  service: {
+    name: envVars.SERVICE_NAME,
+    peerName: envVars.SERVICE_PEER_NAME,
+    peerHost: envVars.SERVICE_PEER_HOST,
+    peerPort: envVars.SERVICE_PEER_PORT,
+    jwtSecret: envVars.SERVICE_JWT_SECRET,
+  },
   env: envVars.NODE_ENV,
   port: envVars.SERVER_PORT,
+  sslPort: envVars.SSL_SERVER_PORT,
   mongooseDebug: envVars.MONGOOSE_DEBUG,
   jwtSecret: envVars.JWT_SECRET,
   mongo: {
@@ -72,7 +87,6 @@ export const config = {
     appSecret: envVars.WX_APP_SECRET,
     loginUrl: envVars.WXLOGIN_URI,
     redirectUrl: encodeURI(envVars.REDIRECT_URI),
-    downloadUrl: envVars.DOWNLOAD_URI,
     notifyUrl: envVars.NOTIFY_URI,
     sandbox: envVars.WX_SANDBOX,
   },
