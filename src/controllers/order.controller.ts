@@ -51,15 +51,20 @@ export let createOrder = async (req, res, next) => {
         username: currentUser.username
     }, config.jwtSecret);
 
+    let gservice;
+    if(req.body.isGroupOrder)
+    {
+         gservice = await groupServiceModel.findOne({ gServiceItemid: req.body.gServiceItemid });
+    }
+
     let orderid = "ORDER_" + _.random(10000, 99999) + "_" + moment(new Date()).format("YYYYMMDDHHmm");//("YYYYMMDDHHmm");
     let orderitem = new orderModel({
         orderid: orderid,
         phoneNo: req.body.phoneNo,
         contactsUserName: req.body.contactsUserName,
         isGroupOrder: req.body.isGroupOrder ? req.body.isGroupOrder : false,
-        orderContent: req.body.orderContent ? req.body.orderContent : "无",
-        groupContent: req.body.orderContent ? req.body.orderContent : "无",
-
+        orderContent: req.body.isGroupOrder ? ( gservice ? gservice.gServiceItemName : "无"):(req.body.orderContent ? req.body.orderContent : "无"),
+        groupContent: gservice ? gservice.gServiceItemName : "无",
         orderAddress: req.body.orderAddress ? req.body.orderAddress : "无",
 
         houseName: req.body.houseName ? req.body.houseName : "无小区",
