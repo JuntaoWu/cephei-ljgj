@@ -13,16 +13,16 @@ import PaymentModel, { Payment, PaymentStatus } from '../models/payment.model';
 import OrderItemModel, { OrderStatus } from '../models/order.model';
 
 const x2js = new X2JS();
+const secureSignType = 'HMAC-SHA256';
 
 export let createWxConfig = async (req, res, next) => {
     const timestamp = Math.floor(+new Date() / 1000).toString();
     const nonceStr = uuid().replace(/-/g, "");
-    const signType = "HMAC-SHA256";
     const configParams = [];
     configParams.push({ key: "appId", value: config.wx.appId });
     configParams.push({ key: "timestamp", value: timestamp });
     configParams.push({ key: "nonceStr", value: nonceStr });
-    configParams.push({ key: "signType", value: signType });
+    configParams.push({ key: "signType", value: secureSignType });
     configParams.push({ key: "url", value: decodeURIComponent(req.body.url) });
 
     const signature = await createWxSignatureAsync(configParams).catch(error => {
@@ -38,7 +38,7 @@ export let createWxConfig = async (req, res, next) => {
         appId: config.wx.appId,
         timestamp: timestamp,
         nonceStr: nonceStr,
-        signType: signType,
+        signType: secureSignType,
         signature: signature
     };
 
@@ -127,6 +127,24 @@ export let createUnifiedOrder = async (req, res, next) => {
                     i.timeEnd = time_end;
                     i.status = PaymentStatus.Completed;
                 }
+                else {
+                    switch (trade_state) {
+                        case 'NOTPAY':
+                        case 'USERPAYING':
+                            i.status = PaymentStatus.Waiting;
+                            break;
+                        case 'CLOSED':
+                        case 'REVOKED':
+                            i.status = PaymentStatus.Closed;
+                            break;
+                        case 'PAYERROR':
+                            i.status = PaymentStatus.Exception;
+                            break;
+                        case 'REFUND':
+                            // ...handle refund workflow.
+                            break;
+                    }
+                }
             }
 
             await i.save();
@@ -178,7 +196,7 @@ export let createUnifiedOrder = async (req, res, next) => {
     if (wxOpenId) {
         data.push({ key: 'openid', value: wxOpenId });
     }
-    data.push({ key: "sign_type", value: "HMAC-SHA256" });
+    data.push({ key: "sign_type", value: secureSignType });
 
     const result = await requestUnifiedOrderAsync(data).catch(error => {
         console.error(error);
@@ -392,7 +410,7 @@ export let wxNotify = async (req: Request, res: Response, next: NextFunction) =>
     return res.end();
 };
 
-function getSignature(data: any[], apiKey: string, signType: string = "HMAC-SHA256") {
+function getSignature(data: any[], apiKey: string, signType: string = secureSignType) {
 
     signType = signType.toUpperCase();
 
@@ -401,7 +419,7 @@ function getSignature(data: any[], apiKey: string, signType: string = "HMAC-SHA2
 
     console.log("dataToSignWithApiKey:", dataToSignWithApiKey);
 
-    if (signType == "HMAC-SHA256") {
+    if (signType == secureSignType) {
         let hmac = createHmac("sha256", apiKey);
         let signature = hmac.update(dataToSignWithApiKey).digest("hex").toUpperCase();
         console.log("signature:", signature);
@@ -445,7 +463,7 @@ async function getSandboxKeyAsync(): Promise<string> {
         let data = [];
         data.push({ key: "mch_id", value: config.wx.mchId });
         data.push({ key: "nonce_str", value: nonceStr });
-        data.push({ key: "sign_type", value: "HMAC-SHA256" });
+        data.push({ key: "sign_type", value: secureSignType });
 
         let signature = getSignature(data, config.wx.mchKey);
 
@@ -455,7 +473,7 @@ async function getSandboxKeyAsync(): Promise<string> {
             xml: {
                 mch_id: config.wx.mchId,
                 nonce_str: nonceStr,
-                sign_type: "HMAC-SHA256",
+                sign_type: secureSignType,
                 sign: signature,
             }
         });
@@ -529,7 +547,7 @@ async function queryUnifiedOrderAsync(orderInfo): Promise<any> {
     // https://api.mch.weixin.qq.com/pay/orderquery
     let data = [];
     let nonceStr = uuid().replace(/-/g, '');
-    let signType = "HMAC-SHA256";
+    let signType = secureSignType;
     data.push({ key: 'appid', value: config.wx.appId });
     data.push({ key: 'mch_id', value: config.wx.mchId });
     if (orderInfo.transactionId) {
@@ -605,7 +623,7 @@ async function createWXPaymentParams(payload) {
     const packageStr = `prepay_id=${payload.prepay_id}`;
     const timestamp = Math.floor(+new Date() / 1000).toString();
     const nonceStr = uuid().replace(/-/g, "");
-    const signType = "HMAC-SHA256";
+    const signType = secureSignType;
 
     const data = [];
     data.push({ key: "appId", value: config.wx.appId });
@@ -642,8 +660,7 @@ async function createWxSignatureAsync(payload) {
         payload[urlIndex].value = decodeURIComponent(payload[urlIndex].value);
     }
 
-    let signType = "HMAC-SHA256";
-    const signature = await getSignatureBasedOnEnv(payload, signType);
+    const signature = await getSignatureBasedOnEnv(payload, secureSignType);
 
     return signature;
 }

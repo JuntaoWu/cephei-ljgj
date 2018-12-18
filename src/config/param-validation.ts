@@ -127,6 +127,18 @@ export default {
                 value: Joi.alternatives().try(Joi.string(), Joi.number())
             }))
         }
+    },
+    // POST /api/shared/
+    getSharedOrders: {
+        body: {
+            payload: Joi.array().items(Joi.string())
+        }
+    },
+    // GET /api/shared/:orderId
+    getSharedOrderDetail: {
+        params: {
+            orderId: Joi.string().required(),
+        }
     }
 
 };

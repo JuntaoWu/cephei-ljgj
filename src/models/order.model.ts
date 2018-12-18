@@ -101,7 +101,7 @@ export class OrderItem extends Typegoose {
   @prop()
   public projectid: String;
 
-  @prop({ default: OrderPaymentStatus.Initializing })
+  @prop({ default: OrderPaymentStatus.Waiting })
   public paymentStatus?: OrderPaymentStatus;
 
   @prop()

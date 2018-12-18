@@ -42,10 +42,10 @@ export enum PaymentStatus {
 
         orderItem.paidAmount = orderAmount - (paidFee + (+this.totalFee));
     }
-    else if (this.status == PaymentStatus.Waiting && !orderItem.paymentStatus) {
+    else if (this.status == PaymentStatus.Waiting && (!orderItem.paymentStatus || orderItem.paymentStatus != OrderPaymentStatus.Closed)) {
         orderItem.paymentStatus = OrderPaymentStatus.Waiting;
     }
-    else if (this.status == PaymentStatus.Exception && (!orderItem.paymentStatus || orderItem.paymentStatus == OrderPaymentStatus.Waiting)) {
+    else if (this.status == PaymentStatus.Exception && (!orderItem.paymentStatus || orderItem.paymentStatus != OrderPaymentStatus.Closed)) {
         orderItem.paymentStatus = OrderPaymentStatus.Exception;
     }
     else {
