@@ -14,7 +14,7 @@ export let list = async (req, res, next) => {
         const err = new APIError("orderIds not provided", httpStatus.BAD_REQUEST, true);
         return next(err);
     }
-    const orders = await OrderModel.find({ $in: { orderid: req.body.payload } });
+    const orders = await OrderModel.find({ orderid: { $in: req.body.payload } });
     return res.json({
         code: 0,
         message: "OK",
