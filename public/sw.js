@@ -145,15 +145,19 @@ self.__precacheManifest = [
   },
   {
     "url": "images/project/rolls/0/01.jpg",
-    "revision": "2bdf4fee5ed16591e714f31d91677f34"
+    "revision": "5fa694cb23f8e9fe2acad1627144b0d6"
   },
   {
     "url": "images/project/rolls/0/02.jpg",
-    "revision": "06fcd4d5e759d38177a8d378ccdaaa4c"
+    "revision": "577ebc8607048d9382e1821ea94f9501"
   },
   {
     "url": "images/project/rolls/0/03.jpg",
-    "revision": "99ce1613a4d6a5213dda3a1f522a6200"
+    "revision": "5924a86dbab591e145898812af5233dc"
+  },
+  {
+    "url": "images/project/rolls/0/04.jpg",
+    "revision": "28cf329e8d2c6d0aafee13d3ff212ee8"
   },
   {
     "url": "images/project/rolls/1/01.jpg",
