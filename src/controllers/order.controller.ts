@@ -155,6 +155,8 @@ export let getMyOrders = async (req, res, next) => {
         let result = new shotOrderItem();
         result.orderid = m.orderid;
         result.orderContent = m.orderContent;
+        result.phoneNo = m.phoneNo;
+        result.contactsUserName = m.contactsUserName;
         result.orderStatus = m.orderStatus;
         result.orderThumbUrl = m.orderThumbUrl;
         result.orderTime = m.orderTime;
@@ -306,7 +308,9 @@ export let getOrderInfo = async (req, res, next) => {
             orderContent: model.orderContent,
             orderTime: model.orderTime,
             orderStatus: model.orderStatus,
-            orderAddress: model.orderAddress
+            orderAddress: model.orderAddress,
+            contactsUserName:model.contactsUserName,
+            phoneNo:model.phoneNo
         },
         groupOrderInfo: model.isGroupOrder ? {
             houseName: model.houseName,
