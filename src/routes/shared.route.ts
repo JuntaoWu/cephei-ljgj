@@ -17,4 +17,8 @@ router.get('/order/:orderId',
     passport.authenticate("jwtService"),
     sharedCtrl.load);
 
+
+router.route('/order/createContract/:orderId')
+    .post(passport.authenticate("jwt", { failWithError: true }), validate(paramValidation.createContract), sharedCtrl.createContract);
+
 export default router;
