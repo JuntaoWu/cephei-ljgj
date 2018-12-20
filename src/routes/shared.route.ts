@@ -15,7 +15,7 @@ router.post('/order',
 router.get('/order/:orderId',
     validate(paramValidation.getSharedOrderDetail),
     passport.authenticate("jwtService"),
-    sharedCtrl.load);
+    sharedCtrl.getOlderDetailInfo);
 
 
 router.route('/order/createContract/:orderId')
