@@ -101,8 +101,35 @@ export let getOlderDetailInfo = async (req, res, next) => {
         message: "OK",
         data: result
     });
-
 }
+
+export let editOrderAmount = async (req, res, next) => {
+
+    if (!req.body.orderId) {
+        const err = new APIError("orderId not provided", httpStatus.BAD_REQUEST, true);
+        return next(err);
+    }
+    const orderDetail = await OrderModel.findOne({ orderid: req.body.orderId });
+    if(!orderDetail)
+    {
+        return res.json({
+            error: true,
+            message: "error"
+        });
+    }
+
+    orderDetail.update({"orderAmount":req.body.orderAmount });
+
+    return res.json({
+        code :0,
+        error: false,
+        message: "OK",
+        data: {
+            orderid: req.body.orderid,
+            orderAmount: req.body.orderAmount
+        }
+    });
+};
 
 
 
@@ -128,4 +155,4 @@ export let createContract = async (req, res, next) => {
     });
 };
 
-export default { list, load ,getOlderDetailInfo,createContract};
+export default { list, load ,getOlderDetailInfo,editOrderAmount,createContract};

@@ -17,6 +17,8 @@ router.get('/order/:orderId',
     passport.authenticate("jwtService"),
     sharedCtrl.getOlderDetailInfo);
 
+router.route('/order/editOrderAmount')
+    .post(validate(paramValidation.editOrderAmount), sharedCtrl.editOrderAmount);
 
 router.route('/order/createContract/:orderId')
     .post(passport.authenticate("jwt", { failWithError: true }), validate(paramValidation.createContract), sharedCtrl.createContract);
