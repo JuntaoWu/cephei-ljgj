@@ -109,26 +109,30 @@ export let editOrderAmount = async (req, res, next) => {
         const err = new APIError("orderId not provided", httpStatus.BAD_REQUEST, true);
         return next(err);
     }
-    const orderDetail = await OrderModel.findOne({ orderid: req.body.orderId });
-    if(!orderDetail)
-    {
+    let amount =parseInt( req.body.orderAmount); 
+    
+    const orderupdate =await OrderModel.update({"orderid":req.body.orderId},{"orderAmount":amount});
+   
+  //  orderDetail.update(  {$set:{"orderAmount":amount}});//为什么不行
+   if(orderupdate)
+   {
         return res.json({
-            error: true,
-            message: "error"
+            code :0,
+            message: "OK",
+            data: {
+                orderid: req.body.orderId,
+                orderAmount: req.body.orderAmount
+            }
         });
-    }
-
-    orderDetail.update({"orderAmount":req.body.orderAmount });
-
+   }
+   else
+   {
     return res.json({
-        code :0,
-        error: false,
-        message: "OK",
-        data: {
-            orderid: req.body.orderid,
-            orderAmount: req.body.orderAmount
-        }
+        error: true,
+        message: "error:update false !"
     });
+   }
+ 
 };
 
 
