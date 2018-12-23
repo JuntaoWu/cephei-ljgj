@@ -145,5 +145,16 @@ editOrderAmount: {
     body: {
         orderId: Joi.string().required(),
     }
+},
+appendOrderWorkToOrder: {
+    body: {
+        orderId: Joi.string().required(),
+    }
+},
+editOrderWorkToOrder: {
+    body: {
+        orderWorkid: Joi.string().required(),
+    }
 }
+
 };

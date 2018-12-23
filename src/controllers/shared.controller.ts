@@ -132,8 +132,107 @@ export let editOrderAmount = async (req, res, next) => {
         message: "error:update false !"
     });
    }
+};
+
+//追加订单施工内容
+export let appendOrderWorkToOrder = async (req, res, next) => {
+
+    if (!req.body.orderId) {
+        const err = new APIError("orderId not provided", httpStatus.BAD_REQUEST, true);
+        return next(err);
+    }
+
+    let model = await OrderModel.findOne({ orderid: req.body.orderId });
+    if(!model)
+    {
+        return res.json({
+            code: -1,
+            error: true,
+            message: "have no order ! ",
+            data:""
+        });
+    }
+
+    let orderworkid = "ORDERWORK_" + _.random(10000, 99999) + "_" + moment(new Date()).format("YYYYMMDDHHmm");//("YYYYMMDDHHmm");
+
+    let orderworkitem = new orderWorkModel({
+        orderWorkid:orderworkid,
+        orderid: req.body.orderId,
+        orderWork: req.body.orderWork,//不知道如何上传图片数组。
+    });
+
+    let orderworkObj = await orderworkitem.save();
+
+   if(orderworkObj)
+   {
+        return res.json({
+            code :0,
+            message: "OK",
+            data: {
+                orderid: req.body.orderId,
+                orderWorkid: req.body.orderWork
+            }
+        });
+   }
+   else
+   {
+    return res.json({
+        code :-1,
+        error: true,
+        message: "error:Add Order Work Content false !",
+        data:null
+    });
+   }
  
 };
+
+
+//编辑订单施工内容，更新内容
+export let editOrderWorkToOrder = async (req, res, next) => {
+
+    if (!req.body.orderWorkid) {
+        const err = new APIError("orderId not provided", httpStatus.BAD_REQUEST, true);
+        return next(err);
+    }
+
+    let model = await orderWorkModel.findOne({ orderWorkid: req.body.orderWorkid });
+    if(!model)
+    {
+        return res.json({
+            code: -1,
+            error: true,
+            message: "have no order work  ! ",
+            data:null
+        });
+    }
+    const orderWorkupdate =await orderWorkModel.update(
+        {"orderWorkid":req.body.orderWorkid},
+        {"orderWork":req.body.orderWork});
+   if(orderWorkupdate)
+   {
+        return res.json({
+            code :0,
+            message: "OK",
+            data: {
+                orderid: req.body.orderId,
+                orderWorkid: req.body.orderWork
+            }
+        });
+   }
+   else
+   {
+    return res.json({
+        error: true,
+        code:-1,
+        message: "error:Add Order Work Content false !",
+        data:null
+    });
+   }
+ 
+};
+
+
+
 
 
 
@@ -159,4 +258,4 @@ export let createContract = async (req, res, next) => {
     });
 };
 
-export default { list, load ,getOlderDetailInfo,editOrderAmount,createContract};
+export default { list, load ,getOlderDetailInfo,editOrderAmount,createContract,appendOrderWorkToOrder,editOrderWorkToOrder};

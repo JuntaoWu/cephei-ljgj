@@ -23,4 +23,10 @@ router.route('/order/editOrderAmount')
 router.route('/order/createContract/:orderId')
     .post(passport.authenticate("jwt", { failWithError: true }), validate(paramValidation.createContract), sharedCtrl.createContract);
 
+router.route('/order/appendOrderWorkToOrder')
+.post(validate(paramValidation.appendOrderWorkToOrder), sharedCtrl.appendOrderWorkToOrder);
+
+router.route('/order/editOrderWorkToOrder')
+.post(validate(paramValidation.editOrderWorkToOrder), sharedCtrl.editOrderWorkToOrder);
+
 export default router;
