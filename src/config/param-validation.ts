@@ -52,7 +52,7 @@ export default {
     // POST /api/Contract
     createContract: {
         body: {
-            orderid: Joi.string().required()
+            orderId: Joi.string().required()
         }
     },
     createReview: {

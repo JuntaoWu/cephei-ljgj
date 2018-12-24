@@ -20,13 +20,16 @@ router.get('/order/:orderId',
 router.route('/order/editOrderAmount')
     .post(validate(paramValidation.editOrderAmount), sharedCtrl.editOrderAmount);
 
-router.route('/order/createContract/:orderId')
-    .post(passport.authenticate("jwt", { failWithError: true }), validate(paramValidation.createContract), sharedCtrl.createContract);
+router.route('/order/createOrderContract')
+    .post(validate(paramValidation.createContract), sharedCtrl.createOrderContract);
 
 router.route('/order/appendOrderWorkToOrder')
 .post(validate(paramValidation.appendOrderWorkToOrder), sharedCtrl.appendOrderWorkToOrder);
 
 router.route('/order/editOrderWorkToOrder')
 .post(validate(paramValidation.editOrderWorkToOrder), sharedCtrl.editOrderWorkToOrder);
+
+
+
 
 export default router;

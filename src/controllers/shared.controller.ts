@@ -232,30 +232,41 @@ export let editOrderWorkToOrder = async (req, res, next) => {
 };
 
 
+export let createOrderContract = async (req, res, next) => {
 
+    if (!req.body.orderId) {
+        const err = new APIError("orderId not provided", httpStatus.BAD_REQUEST, true);
+        return next(err);
+    }
 
-
-
-
-export let createContract = async (req, res, next) => {
+    let model = await OrderModel.findOne({ orderid: req.body.orderId });
+    if(!model)
+    {
+        return res.json({
+            code: -1,
+            error: true,
+            message: "have no order ! ",
+            data:""
+        });
+    }
 
     let contractid = "ORDER_CONTRACT_" + _.random(10000, 99999) + "_" + moment(new Date()).format("YYYYMMDDHHmm");//("YYYYMMDDHHmm");
 
-    let orderitem = new orderContractModel({
+    let contractitem = new orderContractModel({
         contractid: contractid,
-        orderid: req.body.orderid,
+        orderid: req.body.orderId,
         contractUrls: req.body.contractUrls,//不知道如何上传图片数组。
     });
 
-    let savedContract = await orderitem.save();
+    let savedContract = await contractitem.save();
 
     return res.json({
-        error: false,
+        code: 0,
         message: "OK",
         data: {
-            orderid: req.body.orderid
+            contractid: contractid
         }
     });
 };
 
-export default { list, load ,getOlderDetailInfo,editOrderAmount,createContract,appendOrderWorkToOrder,editOrderWorkToOrder};
+export default { list, load ,getOlderDetailInfo,editOrderAmount,createOrderContract,appendOrderWorkToOrder,editOrderWorkToOrder};
