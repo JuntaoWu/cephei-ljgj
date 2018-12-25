@@ -29,7 +29,6 @@ export let list = async (req, res, next) => {
     });
 }
 
-
 export let load = async (req, res, next) => {
     if (!req.params.orderId) {
         const err = new APIError("orderId not provided", httpStatus.BAD_REQUEST, true);
@@ -43,6 +42,18 @@ export let load = async (req, res, next) => {
     });
 };
 
+export let getOrderContract = async (req, res, next) => {
+    if (!req.params.orderId) {
+        const err = new APIError("orderId not provided", httpStatus.BAD_REQUEST, true);
+        return next(err);
+    }
+    const contractobj = await orderContractModel.findOne({ orderid: req.params.orderId });
+    return res.json({
+        code: 0,
+        message: "OK",
+        data: contractobj
+    });
+};
 
 export let getOlderDetailInfo = async (req, res, next) => {
     
@@ -269,4 +280,7 @@ export let createOrderContract = async (req, res, next) => {
     });
 };
 
-export default { list, load ,getOlderDetailInfo,editOrderAmount,createOrderContract,appendOrderWorkToOrder,editOrderWorkToOrder};
+
+
+
+export default { list, load ,getOlderDetailInfo,editOrderAmount,createOrderContract,appendOrderWorkToOrder,editOrderWorkToOrder,getOrderContract};

@@ -29,7 +29,8 @@ router.route('/order/appendOrderWorkToOrder')
 router.route('/order/editOrderWorkToOrder')
 .post(validate(paramValidation.editOrderWorkToOrder), sharedCtrl.editOrderWorkToOrder);
 
-
-
+router.get('/order/:orderId/getOrderContract',
+    validate(paramValidation.getOrderContract),
+    sharedCtrl.getOrderContract);
 
 export default router;

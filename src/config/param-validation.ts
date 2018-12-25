@@ -140,6 +140,11 @@ export default {
             orderId: Joi.string().required(),
         }
     },
+    getOrderContract: {
+        params: {
+            orderId: Joi.string().required(),
+        }
+    },
 // GET /api/shared/:orderId
 editOrderAmount: {
     body: {
