@@ -12,6 +12,10 @@ router.post('/order',
     passport.authenticate("jwtService"),
     sharedCtrl.list);
 
+router.get('/order/:orderId/getOrderContract',
+    validate(paramValidation.getOrderContract),
+    sharedCtrl.getOrderContract);
+
 router.get('/order/:orderId',
     validate(paramValidation.getSharedOrderDetail),
     passport.authenticate("jwtService"),
@@ -29,8 +33,6 @@ router.route('/order/appendOrderWorkToOrder')
 router.route('/order/editOrderWorkToOrder')
 .post(validate(paramValidation.editOrderWorkToOrder), sharedCtrl.editOrderWorkToOrder);
 
-router.get('/order/:orderId/getOrderContract',
-    validate(paramValidation.getOrderContract),
-    sharedCtrl.getOrderContract);
+
 
 export default router;
