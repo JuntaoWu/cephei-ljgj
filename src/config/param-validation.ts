@@ -145,6 +145,12 @@ export default {
             orderId: Joi.string().required(),
         }
     },
+       createfund: {
+        body: {
+            orderId: Joi.string().required()
+        }
+    },
+
 // GET /api/shared/:orderId
 editOrderAmount: {
     body: {
