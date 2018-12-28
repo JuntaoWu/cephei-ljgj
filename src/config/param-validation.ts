@@ -64,6 +64,11 @@ export default {
         query: {
             orderid: Joi.string().required()
         }
+    }, 
+    getOrderFunds: {
+        query: {
+            orderid: Joi.string().required()
+        }
     },
     body: {
         projectid: Joi.string().required()

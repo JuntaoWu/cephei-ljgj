@@ -2,6 +2,7 @@
 import * as _ from 'lodash';
 import moment from 'moment';
 import funditemModel from '../models/funditem.model';
+import orderModel, { OrderItem, shotOrderItem, OrderStatus } from '../models/order.model';
 
 /**
  * 创建一个项目款项
@@ -10,6 +11,18 @@ import funditemModel from '../models/funditem.model';
  * @param next 
  */
 export let createOneFundItem = async (req, res, next) => {
+
+    let orderobj = await orderModel.findOne({ orderid: req.body.orderid });
+    if(orderobj.orderStatus == OrderStatus.Initializing||orderobj.orderAmount<=10 || req.body.fundItemAmount>orderobj.orderAmount )
+    {
+        return res.json({
+            error: true,
+            message: "order status is initializing . or orderamount is error !",
+            data: {
+                orderid: req.body.orderid
+            }
+        });
+    }
 
     let fundItemId = "FUND_" + _.random(10000, 99999)  + moment(new Date()).format("YYYYMMDDHHmm");//("YYYYMMDDHHmm");
 
