@@ -1,7 +1,7 @@
 
 import * as _ from 'lodash';
 import moment from 'moment';
-import funditemModel from '../models/funditem.model';
+import funditemModel, { FundStatus } from '../models/funditem.model';
 import orderModel, { OrderItem, shotOrderItem, OrderStatus } from '../models/order.model';
 
 /**
@@ -29,9 +29,9 @@ export let createOneFundItem = async (req, res, next) => {
     let fundItem = new funditemModel({
         fundItemId: fundItemId,
         orderid: req.body.orderid,
-        fundItemType: req.body.fundItemType,
+        fundItemType:1,
         fundItemAmount: req.body.fundItemAmount,
-        fundItemStatus: req.body.fundItemStatus
+        fundItemStatus: FundStatus.UnPaid
     });
 
     let fundobj = await fundItem.save();
@@ -81,3 +81,5 @@ export let getFundItems = async (req, res, next) => {
     }
    
 }
+
+export default { getFundItems, createOneFundItem};

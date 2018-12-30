@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import passport from 'passport';
 
 import sharedCtrl from '../controllers/shared.controller';
+import fundsCtrl from '../controllers/funditem.controller';
 import paramValidation from '../config/param-validation';
 import validate from 'express-validation';
 
@@ -16,10 +17,16 @@ router.get('/order/:orderId/getOrderContract',
     validate(paramValidation.getOrderContract),
     sharedCtrl.getOrderContract);
 
+router.route('/order/:orderId/getOrderFunds')
+.get(validate(paramValidation.getOrderFunds), fundsCtrl.getFundItems);
+
 router.get('/order/:orderId',
     validate(paramValidation.getSharedOrderDetail),
     passport.authenticate("jwtService"),
     sharedCtrl.getOlderDetailInfo);
+
+router.route('/order/createOrderFundItem')
+.post(validate(paramValidation.createfund), fundsCtrl.createOneFundItem);
 
 router.route('/order/editOrderAmount')
     .post(validate(paramValidation.editOrderAmount), sharedCtrl.editOrderAmount);
@@ -32,6 +39,9 @@ router.route('/order/appendOrderWorkToOrder')
 
 router.route('/order/editOrderWorkToOrder')
 .post(validate(paramValidation.editOrderWorkToOrder), sharedCtrl.editOrderWorkToOrder);
+
+
+
 
 
 
