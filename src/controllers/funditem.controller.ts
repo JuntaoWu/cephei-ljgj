@@ -13,7 +13,7 @@ import orderModel, { OrderItem, shotOrderItem, OrderStatus } from '../models/ord
 export let createOneFundItem = async (req, res, next) => {
 
     let orderobj = await orderModel.findOne({ orderid: req.body.orderid });
-    if(orderobj.orderStatus == OrderStatus.Initializing||orderobj.orderAmount<=10 || req.body.fundItemAmount>orderobj.orderAmount )
+    if(orderobj.orderAmount<=10 || req.body.fundItemAmount>orderobj.orderAmount )
     {
         return res.json({
             error: true,
