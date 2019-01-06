@@ -105,7 +105,11 @@ export let getOlderDetailInfo = async (req, res, next) => {
             houseName: model.houseName,
             groupService: model.orderContent
         } : null,
-        orderWorkList: orderworks
+        orderWorkList: orderworks,
+        orderAmountInfo: {
+            orderAmount: model.orderAmount,
+            paymentStatus: model.paymentStatus,
+        }
     }
     return res.json({
         code: 0,
@@ -179,10 +183,7 @@ export let appendOrderWorkToOrder = async (req, res, next) => {
         return res.json({
             code :0,
             message: "OK",
-            data: {
-                orderid: req.body.orderId,
-                orderWorkid: req.body.orderWork
-            }
+            data: orderworkObj
         });
    }
    else
