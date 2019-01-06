@@ -72,6 +72,7 @@ export let getFundItems = async (req, res, next) => {
             message: "OK",
             data: {
                 orderAmount:orderinfo.orderAmount,
+                orderPaymentStatus:orderinfo.paymentStatus,
                 fundItems:funds
             }
         });
