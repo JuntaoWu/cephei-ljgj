@@ -57,7 +57,7 @@ export let getFundItems = async (req, res, next) => {
     let fundItems = await funditemModel.find({ orderid: req.query.orderid });
 
     let funds = [];
-    if(!fundItems)
+    if(fundItems)
     {   
         return fundItems.map(m => {
             let result = {
