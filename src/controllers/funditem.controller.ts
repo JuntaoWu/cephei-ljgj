@@ -54,25 +54,32 @@ export let createOneFundItem = async (req, res, next) => {
  * @param next 
  */
 export let getFundItems = async (req, res, next) => {
+    let orderinfo = await orderModel.findOne({orderid:req.query.orderid});
     let fundItems = await funditemModel.find({ orderid: req.query.orderid });
 
-    let funds = [];
-    if(fundItems)
+    if(fundItems && orderinfo)
     {   
-        return fundItems.map(m => {
+        const funds = fundItems.map(m => {
             let result = {
                 fundItemType: m.fundItemType,
                 fundItemAmount: m.fundItemAmount,
                 fundItemStatus: m.fundItemStatus
             }
-            funds.push(result);
             return result;
+        });
+        return res.json({
+            code: 0,
+            message: "OK",
+            data: {
+                orderAmount:orderinfo.orderAmount,
+                fundItems:funds
+            }
         });
     }
     else
     {
         return res.json({
-            error: true,
+            code: 500,
             message: "error : get fund items error",
             data: {
                 orderid: req.body.orderid
