@@ -225,10 +225,7 @@ export let editOrderWorkToOrder = async (req, res, next) => {
         return res.json({
             code :0,
             message: "OK",
-            data: {
-                orderid: req.body.orderId,
-                orderWorkid: req.body.orderWork
-            }
+            data: orderWorkupdate
         });
    }
    else
