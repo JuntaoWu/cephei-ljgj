@@ -66,7 +66,7 @@ export default {
         }
     }, 
     getOrderFunds: {
-        query: {
+        params: {
             orderid: Joi.string().required()
         }
     },
