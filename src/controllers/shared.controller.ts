@@ -217,9 +217,10 @@ export let editOrderWorkToOrder = async (req, res, next) => {
             data:null
         });
     }
-    const orderWorkupdate =await orderWorkModel.update(
-        {"orderWorkid":req.body.orderWorkid},
-        {"orderWork":req.body.orderWork});
+
+    model.orderWork = req.body.orderWork;
+
+    const orderWorkupdate =await model.save();
    if(orderWorkupdate)
    {
         return res.json({
