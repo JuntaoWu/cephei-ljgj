@@ -12,7 +12,7 @@ import orderModel, { OrderItem, shotOrderItem, OrderStatus } from '../models/ord
  */
 export let createOneFundItem = async (req, res, next) => {
 
-    let orderobj = await orderModel.findOne({ orderid: req.body.orderid });
+    let orderobj = await orderModel.findOne({ orderid: req.body.orderId });
     if(orderobj.orderAmount<=10 || req.body.fundItemAmount>orderobj.orderAmount )
     {
         return res.json({
@@ -28,8 +28,8 @@ export let createOneFundItem = async (req, res, next) => {
 
     let fundItem = new funditemModel({
         fundItemId: fundItemId,
-        orderid: req.body.orderid,
-        fundItemType:1,
+        orderid: req.body.orderId,
+        fundItemType:req.body.fundItemType,
         fundItemAmount: req.body.fundItemAmount,
         fundItemStatus: FundStatus.UnPaid
     });
@@ -37,11 +37,11 @@ export let createOneFundItem = async (req, res, next) => {
     let fundobj = await fundItem.save();
 
     return res.json({
-        error: false,
+        code: 0,
         message: "OK",
         data: {
             fundItemId:fundItemId,
-            orderid: req.body.orderid
+            orderid: req.body.orderId
         }
     });
 }
