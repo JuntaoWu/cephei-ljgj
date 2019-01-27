@@ -32,7 +32,7 @@ export let createOneFundItem = async (req, res, next) => {
         orderid: req.body.orderId,
         fundItemType: req.body.fundItemType,
         fundItemAmount: req.body.fundItemAmount,
-        fundItemStatus: FundStatus.UnPaid
+        fundItemStatus: FundStatus.Waiting
     });
 
     let fundobj = await fundItem.save();
