@@ -27,4 +27,8 @@ router.route('/getWxSignature')
 router.route('/wxNotify')
     .post(paymentCtrl.wxNotify);
 
+
+router.route('/createUnifiedOrderByFundItem')
+    .post(paymentCtrl.createUnifiedOrderByFundItem);
+
 export default router;
