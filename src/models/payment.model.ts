@@ -103,6 +103,8 @@ export class Payment extends Typegoose {
     public errCodeDes: String;
     @prop({ default: PaymentStatus.Waiting })
     public status: PaymentStatus;
+    @prop()
+    public fundItemId: String;
 }
 
 const PaymentModel = new Payment().getModelForClass(Payment, {
