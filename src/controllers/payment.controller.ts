@@ -74,7 +74,7 @@ export let createUnifiedOrderByFundItem = async (req, res, next) => {
     }
 
     let existingPayments = await PaymentModel.find({
-        orderId: req.body.orderId,
+        orderId: orderItem.orderid,
     });
 
     let paidAlready = _(existingPayments.filter(i => i.status == PaymentStatus.Completed)).sumBy("totalFee");
