@@ -14,7 +14,6 @@ export class shotOrderItem {
   public phoneNo: Int32;
 
   public contactsUserName: String;
-  
 
   public orderStatus: OrderStatus;
 

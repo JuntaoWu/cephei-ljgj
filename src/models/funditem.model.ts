@@ -16,6 +16,9 @@ export class funditem extends Typegoose {
 
     @prop()
     public fundItemType:Number;
+
+    @prop()
+    public fundItemTitle:string;
     
     @prop()
     public fundItemAmount:Number;
