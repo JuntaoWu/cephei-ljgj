@@ -79,6 +79,7 @@ export let getFundItems = async (req, res, next) => {
     if (fundItems && orderinfo) {
         const funds = fundItems.map(m => {
             let result = {
+                fundItemId:m.fundItemId,
                 fundItemType: m.fundItemType,
                 fundItemAmount: m.fundItemAmount,
                 fundItemStatus: m.fundItemStatus

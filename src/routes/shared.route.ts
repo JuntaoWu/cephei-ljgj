@@ -28,7 +28,7 @@ router.get('/order/:orderId',
 router.route('/order/createOrderFundItem')
 .post(validate(paramValidation.createfund), fundsCtrl.createOneFundItem);
 
-router.route('/revokeOrderFundItem')
+router.route('/order/revokeOrderFundItem')
     .post(fundsCtrl.revokeOrderFundItem);
 
 router.route('/order/editOrderAmount')
