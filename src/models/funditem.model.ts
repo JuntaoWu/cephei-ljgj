@@ -3,7 +3,8 @@ import { Int32 } from 'bson';
 
 export enum FundStatus {
     UnPaid,
-    Paid
+    Paid,
+    Closed,
   }
 
 export class funditem extends Typegoose {

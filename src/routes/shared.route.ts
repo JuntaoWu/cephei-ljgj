@@ -28,6 +28,9 @@ router.get('/order/:orderId',
 router.route('/order/createOrderFundItem')
 .post(validate(paramValidation.createfund), fundsCtrl.createOneFundItem);
 
+router.route('/revokeOrderFundItem')
+    .post(fundsCtrl.revokeOrderFundItem);
+
 router.route('/order/editOrderAmount')
     .post(validate(paramValidation.editOrderAmount), sharedCtrl.editOrderAmount);
 
