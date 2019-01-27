@@ -250,21 +250,26 @@ export let createOrderContract = async (req, res, next) => {
         });
     }
 
-    let contractid = "ORDER_CONTRACT_" + _.random(10000, 99999) + "_" + moment(new Date()).format("YYYYMMDDHHmm");//("YYYYMMDDHHmm");
+    let contract = await orderContractModel.findOne({ orderid: req.body.orderId });
+    if(!contract) {
+        let contractid = "ORDER_CONTRACT_" + _.random(10000, 99999) + "_" + moment(new Date()).format("YYYYMMDDHHmm");//("YYYYMMDDHHmm");
+        contract = new orderContractModel({
+            contractid: contractid,
+            orderid: req.body.orderId,
+            contractUrls: req.body.contractUrls,//不知道如何上传图片数组。
+        });
+    }
+    else {
+        contract.contractUrls = req.body.contractUrls;
+    }
 
-    let contractitem = new orderContractModel({
-        contractid: contractid,
-        orderid: req.body.orderId,
-        contractUrls: req.body.contractUrls,//不知道如何上传图片数组。
-    });
-
-    let savedContract = await contractitem.save();
+    let savedContract = await contract.save();
 
     return res.json({
         code: 0,
         message: "OK",
         data: {
-            contractid: contractid
+            contractid: savedContract.contractid
         }
     });
 };
