@@ -10,6 +10,7 @@ import passport from './config/passport';
 import routes from './routes';
 import versionRouter from './routes/version';
 import _ from 'lodash';
+import config from './config/config';
 
 var app = express();
 
@@ -50,34 +51,44 @@ app.use('/api', routes);
 app.use('/version', versionRouter);
 
 // catch 404 and forward to error handler
-app.use(function (req, res, next) {
-  next(createError(404));
-});
+// app.use(function (req, res, next) {
+//   next(createError(404));
+// });
 
 // error handler
 app.use((err: any, req: any, res: any, next: any) => {
-  console.error(err);
+
+  console.log('app error handler');
 
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-  // render the error page
-  res.status(err.status || 500);
+  // customize Joi validation errors
+  if (err.isJoi) {
+    err.message = err.details.map(e => e.message).join('; ');
+    err.status = 400;
+  }
 
-  if (err && err.errors && err.errors.length) {
-    const message = _(err.errors).flatMap(m => m.messages).join("\n");
-    return res.json({
-      code: err.status,
-      message: message || err.message
-    });
-  }
-  else {
-    return res.json({
-      code: err.status,
-      message: err.message
-    });
-  }
+  // render the error page
+  res.status(err.status || 500).json({
+    message: err.message
+  });
+  next(err);
+
+  // if (err && err.errors && err.errors.length) {
+  //   const message = _(err.errors).flatMap(m => m.messages).join("\n");
+  //   return res.json({
+  //     code: err.status,
+  //     message: message || err.message
+  //   });
+  // }
+  // else {
+  //   return res.json({
+  //     code: err.status,
+  //     message: err.message
+  //   });
+  // }
 });
 
 export default app;

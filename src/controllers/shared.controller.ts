@@ -56,7 +56,7 @@ export let getOrderContract = async (req, res, next) => {
 };
 
 export let getOlderDetailInfo = async (req, res, next) => {
-    
+
     if (!req.params.orderId) {
         const err = new APIError("orderId not provided", httpStatus.BAD_REQUEST, true);
         return next(err);
@@ -84,11 +84,10 @@ export let getOlderDetailInfo = async (req, res, next) => {
     );
     let orderContractobj = await orderContractModel.findOne({ orderid: req.params.orderId });
     let ordercontracturls;
-    if(orderContractobj)
-    {
+    if (orderContractobj) {
         ordercontracturls = orderContractobj.contractUrls;
     }
-    
+
     let result = {
         orderid: model.orderid,
         orderBaseInfo:
@@ -105,7 +104,11 @@ export let getOlderDetailInfo = async (req, res, next) => {
             houseName: model.houseName,
             groupService: model.orderContent
         } : null,
-        orderWorkList: orderworks
+        orderWorkList: orderworks,
+        orderAmountInfo: {
+            orderAmount: model.orderAmount,
+            paymentStatus: model.paymentStatus,
+        }
     }
     return res.json({
         code: 0,
@@ -120,32 +123,30 @@ export let editOrderAmount = async (req, res, next) => {
         const err = new APIError("orderId not provided", httpStatus.BAD_REQUEST, true);
         return next(err);
     }
-    let amount =parseInt( req.body.orderAmount); 
-    
-    const orderupdate =await OrderModel.update({"orderid":req.body.orderId},{"orderAmount":amount});
-   
-  //  orderDetail.update(  {$set:{"orderAmount":amount}});//为什么不行
-   if(orderupdate)
-   {
+    let amount = +req.body.orderAmount;
+
+    const orderupdate = await OrderModel.update({ "orderid": req.body.orderId }, { "orderAmount": amount });
+
+    //  orderDetail.update(  {$set:{"orderAmount":amount}});//为什么不行
+    if (orderupdate) {
         return res.json({
-            code :0,
+            code: 0,
             message: "OK",
             data: {
                 orderid: req.body.orderId,
                 orderAmount: req.body.orderAmount
             }
         });
-   }
-   else
-   {
-    return res.json({
-        error: true,
-        message: "error:update false !"
-    });
-   }
+    }
+    else {
+        return res.json({
+            error: true,
+            message: "error:update false !"
+        });
+    }
 };
 
-//追加订单施工内容
+// 追加订单施工内容
 export let appendOrderWorkToOrder = async (req, res, next) => {
 
     if (!req.body.orderId) {
@@ -153,48 +154,42 @@ export let appendOrderWorkToOrder = async (req, res, next) => {
         return next(err);
     }
 
-    let model = await OrderModel.findOne({ orderid: req.body.orderId });
-    if(!model)
-    {
+    const model = await OrderModel.findOne({ orderid: req.body.orderId });
+    if (!model) {
         return res.json({
             code: -1,
             error: true,
             message: "have no order ! ",
-            data:""
+            data: ""
         });
     }
 
-    let orderworkid = "ORDERWORK_" + _.random(10000, 99999) + "_" + moment(new Date()).format("YYYYMMDDHHmm");//("YYYYMMDDHHmm");
+    const orderworkid = "ORDERWORK_" + _.random(10000, 99999) + "_" + moment(new Date()).format("YYYYMMDDHHmm");//("YYYYMMDDHHmm");
 
-    let orderworkitem = new orderWorkModel({
-        orderWorkid:orderworkid,
+    const orderworkitem = new orderWorkModel({
+        orderWorkid: orderworkid,
         orderid: req.body.orderId,
         orderWork: req.body.orderWork,//不知道如何上传图片数组。
     });
 
-    let orderworkObj = await orderworkitem.save();
+    const orderworkObj = await orderworkitem.save();
 
-   if(orderworkObj)
-   {
+    if (orderworkObj) {
         return res.json({
-            code :0,
+            code: 0,
             message: "OK",
-            data: {
-                orderid: req.body.orderId,
-                orderWorkid: req.body.orderWork
-            }
+            data: orderworkObj
         });
-   }
-   else
-   {
-    return res.json({
-        code :-1,
-        error: true,
-        message: "error:Add Order Work Content false !",
-        data:null
-    });
-   }
- 
+    }
+    else {
+        return res.json({
+            code: -1,
+            error: true,
+            message: "error:Add Order Work Content false !",
+            data: null
+        });
+    }
+
 };
 
 
@@ -207,39 +202,34 @@ export let editOrderWorkToOrder = async (req, res, next) => {
     }
 
     let model = await orderWorkModel.findOne({ orderWorkid: req.body.orderWorkid });
-    if(!model)
-    {
+    if (!model) {
         return res.json({
             code: -1,
             error: true,
             message: "have no order work  ! ",
-            data:null
+            data: null
         });
     }
-    const orderWorkupdate =await orderWorkModel.update(
-        {"orderWorkid":req.body.orderWorkid},
-        {"orderWork":req.body.orderWork});
-   if(orderWorkupdate)
-   {
+
+    model.orderWork = req.body.orderWork;
+
+    const orderWorkupdate = await model.save();
+    if (orderWorkupdate) {
         return res.json({
-            code :0,
+            code: 0,
             message: "OK",
-            data: {
-                orderid: req.body.orderId,
-                orderWorkid: req.body.orderWork
-            }
+            data: orderWorkupdate
         });
-   }
-   else
-   {
-    return res.json({
-        error: true,
-        code:-1,
-        message: "error:Add Order Work Content false !",
-        data:null
-    });
-   }
- 
+    }
+    else {
+        return res.json({
+            error: true,
+            code: -1,
+            message: "error:Add Order Work Content false !",
+            data: null
+        });
+    }
+
 };
 
 
@@ -251,31 +241,35 @@ export let createOrderContract = async (req, res, next) => {
     }
 
     let model = await OrderModel.findOne({ orderid: req.body.orderId });
-    if(!model)
-    {
+    if (!model) {
         return res.json({
             code: -1,
             error: true,
             message: "have no order ! ",
-            data:""
+            data: ""
         });
     }
 
-    let contractid = "ORDER_CONTRACT_" + _.random(10000, 99999) + "_" + moment(new Date()).format("YYYYMMDDHHmm");//("YYYYMMDDHHmm");
+    let contract = await orderContractModel.findOne({ orderid: req.body.orderId });
+    if(!contract) {
+        let contractid = "ORDER_CONTRACT_" + _.random(10000, 99999) + "_" + moment(new Date()).format("YYYYMMDDHHmm");//("YYYYMMDDHHmm");
+        contract = new orderContractModel({
+            contractid: contractid,
+            orderid: req.body.orderId,
+            contractUrls: req.body.contractUrls,//不知道如何上传图片数组。
+        });
+    }
+    else {
+        contract.contractUrls = req.body.contractUrls;
+    }
 
-    let contractitem = new orderContractModel({
-        contractid: contractid,
-        orderid: req.body.orderId,
-        contractUrls: req.body.contractUrls,//不知道如何上传图片数组。
-    });
-
-    let savedContract = await contractitem.save();
+    let savedContract = await contract.save();
 
     return res.json({
         code: 0,
         message: "OK",
         data: {
-            contractid: contractid
+            contractid: savedContract.contractid
         }
     });
 };
@@ -283,4 +277,4 @@ export let createOrderContract = async (req, res, next) => {
 
 
 
-export default { list, load ,getOlderDetailInfo,editOrderAmount,createOrderContract,appendOrderWorkToOrder,editOrderWorkToOrder,getOrderContract};
+export default { list, load, getOlderDetailInfo, editOrderAmount, createOrderContract, appendOrderWorkToOrder, editOrderWorkToOrder, getOrderContract };
