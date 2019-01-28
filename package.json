@@ -3,9 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build:sw": "node ./workbox-generate.js",
-    "build": "npm run build-ts && npm run build:sw",
-    "build-ts": "tsc",
+    "build": "tsc",
     "serve": "node dist/bin/www.js",
     "start": "npm run build && npm run serve",
     "debug": "node inspect ./dist/bin/www"

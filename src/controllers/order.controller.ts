@@ -93,7 +93,15 @@ export let createOrder = async (req, res, next) => {
 export let getContract = async (req, res, next) => {
     let ordercontractObj = await orderContractModel.findOne({ orderid: req.query.orderid });
     if (ordercontractObj) {
-        return res.json(ordercontractObj);
+        return res.json({
+            contractid: ordercontractObj.contractid,
+            orderid: ordercontractObj.orderid,
+            contractUrls: ordercontractObj.contractUrls.map(i => {
+                return {
+                    cmgUrl: i
+                };
+            })
+        });
     }
     else {
         return res.json({
