@@ -2,11 +2,9 @@ import { prop, Typegoose, ModelType, InstanceType } from 'typegoose';
 import { Int32 } from 'bson';
 
 export enum FundStatus {
-  Initialization = 1,
-    Waiting = 2,
-    Completed = 3,
-    Closed = 4,
-    Exception = 5,
+    Closed = 0,
+    Waiting = 1,
+    Completed = 2
   }
 
 export class funditem extends Typegoose {

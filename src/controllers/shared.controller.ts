@@ -11,6 +11,7 @@ import OrderModel, { OrderItem } from '../models/order.model';
 
 import orderContractModel, { OrderContract } from '../models/orderContract.model';
 import orderWorkModel, { orderwork } from '../models/orderwork.model';
+import groupHouseItemModel, { groupServicesItem } from '../models/house.model';
 
 import * as _ from 'lodash';
 
@@ -21,7 +22,7 @@ export let list = async (req, res, next) => {
         const err = new APIError("orderIds not provided", httpStatus.BAD_REQUEST, true);
         return next(err);
     }
-    const orders = await OrderModel.find({ orderid: { $in: req.body.payload } });
+    const orders = await OrderModel.find({ orderid: { $in: req.body.payload } }).sort({'orderTime': 'desc'});
     return res.json({
         code: 0,
         message: "OK",
@@ -73,6 +74,8 @@ export let getOlderDetailInfo = async (req, res, next) => {
 
     let orderWorkobj = await orderWorkModel.find({ orderid: req.params.orderId });
 
+    let groupobj = model.isGroupOrder ?  await groupHouseItemModel.findOne({ groupid: model.groupid}):null;
+
     let orderworks = orderWorkobj.map(m => {
         let result = {
             orderworkid: m.orderWorkid,
@@ -101,7 +104,7 @@ export let getOlderDetailInfo = async (req, res, next) => {
         },
         orderContract: ordercontracturls,
         groupOrderInfo: model.isGroupOrder ? {
-            houseName: model.houseName,
+            houseName: groupobj?groupobj.houseName:null,
             groupService: model.orderContent
         } : null,
         orderWorkList: orderworks,

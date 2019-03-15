@@ -20,8 +20,8 @@ import OrderReivewModel, { OrderReivew } from '../models/orderReview.model';
 import groupServiceModel from '../models/groupService.model';
 import orderDiscountModel from '../models/orderdiscount.model';
 import orderWorkModel from '../models/orderwork.model';
-import ProjectItemModel from '../models/project.model';
-import funditemModel from '../models/funditem.model';
+import ProjectItemModel, { ProjectItem } from '../models/project.model';
+import funditemModel, { FundStatus } from '../models/funditem.model';
  
 import groupHouseItemModel, { groupServicesItem } from '../models/house.model';
 import * as _ from 'lodash';
@@ -53,28 +53,32 @@ export let createOrder = async (req, res, next) => {
     }, config.jwtSecret);
 
     let gservice;
+    let groupHouseObj;
     if(req.body.isGroupOrder)
     {
-         gservice = await groupServiceModel.findOne({ gServiceItemid: req.body.gServiceItemid });
+            gservice = await groupServiceModel.findOne({ gServiceItemid: req.body.gServiceItemid });
+            groupHouseObj = await groupHouseItemModel.findOne({groupid:req.body.groupid});
+    }
+    else
+    {
+            gservice = await ProjectItemModel.findOne({ projectid: req.body.projectid });
     }
 
-    let orderid = "ORDER_" + _.random(10000, 99999) + "_" + moment(new Date()).format("YYYYMMDDHHmm");//("YYYYMMDDHHmm");
+    let orderid = "ORDER_" + _.random(1000, 9999) + "_" + moment(new Date()).format("YYYYMMDDHHmm");//("YYYYMMDDHHmm");
     let orderitem = new orderModel({
         orderid: orderid,
         phoneNo: req.body.phoneNo,
         contactsUserName: req.body.contactsUserName,
         isGroupOrder: req.body.isGroupOrder ? req.body.isGroupOrder : false,
-        orderContent: req.body.isGroupOrder ? ( gservice ? gservice.gServiceItemName : "无"):(req.body.orderContent ? req.body.orderContent : "无"),
-        groupContent: gservice ? gservice.gServiceItemName : "无",
-        orderAddress: req.body.orderAddress ? req.body.orderAddress : "无",
-
-        houseName: req.body.houseName ? req.body.houseName : "无小区",
+        orderContent: req.body.isGroupOrder ? ( gservice ? gservice.gServiceItemName : "无"):(req.body.projectid ? gservice.projectName : "无"),
+        orderAddress: req.body.orderAddress ? req.body.orderAddress : req.body.isGroupOrder ? groupHouseObj.houseAddress:"无" ,
+        groupid: req.body.groupid ? req.body.groupid : "无",
         orderDescription: req.body.orderDescription ? req.body.orderDescription : "无",
         gServiceItemid: req.body.gServiceItemid ? req.body.gServiceItemid : "无",
         orderThumbUrl: "",
-        orderStatus: OrderStatus.Preparing,
+        orderStatus: OrderStatus.Initializing,
         orderTime: moment(new Date()).format("YYYY-MM-DD HH:mm:ss"),//req.body.createTime,
-        orderAmount: 0.02,  // todo: change to undefined.
+        orderAmount: null,  // todo: change to undefined.
         craftsman: "",
         createdBy: currentUser.username,
     });
@@ -164,7 +168,7 @@ export let getMyOrders = async (req, res, next) => {
 
     let currentUser: User = req.user;
 
-    let model = await orderModel.find({ createdBy: currentUser.phoneNo });
+    let model = await orderModel.find({ createdBy: currentUser.phoneNo }).sort({'orderTime': 'desc'});
     let shotOrders = model.map(m => {
         let result = new shotOrderItem();
         result.orderid = m.orderid;
@@ -176,6 +180,7 @@ export let getMyOrders = async (req, res, next) => {
         result.orderTime = m.orderTime;
         result.orderAmount = m.orderAmount;
         result.craftsman = m.craftsman;
+        result.orderAddress = m.orderAddress;
         result.paymentStatus = m.paymentStatus;
         return result;
     });
@@ -254,7 +259,6 @@ let getDiscountAmount = function (discoutnid, orderamount) {
     获取订单详情 
 */
 export let getOrderInfo = async (req, res, next) => {
-
     let currentUser: User = req.user;
 
     let model = await orderModel.findOne({ orderid: req.query.orderid });
@@ -266,12 +270,7 @@ export let getOrderInfo = async (req, res, next) => {
         });
     }
 
-    let orderContent ;
-    if( model.orderContent != null)
-    {
-         orderContent = await ProjectItemModel.findOne({ projectid: model.orderContent });
-    }
-
+    let paidAmount=0;
     let funditems = [] ;
     if( req.query.orderid != null)
     {
@@ -284,6 +283,10 @@ export let getOrderInfo = async (req, res, next) => {
                     fundItemAmount: m.fundItemAmount,
                     fundItemStatus: m.fundItemStatus
                 }
+                if(m.fundItemStatus == FundStatus.Completed)
+                {
+                    paidAmount += Number(m.fundItemAmount);
+                }
                 funditems.push(result);
             });
         }
@@ -291,6 +294,9 @@ export let getOrderInfo = async (req, res, next) => {
 
     let service = await groupServiceModel.findOne({ gServiceItemid: model.gServiceItemid });
 
+    let usrdiscounts = [];//获取符合条件的折扣条目
+
+    /*
     let userDiscountList = currentUser.discountList;
 
     let usrdiscounts = [];//获取符合条件的折扣条目
@@ -308,7 +314,8 @@ export let getOrderInfo = async (req, res, next) => {
             usrdiscounts.push(result);
         }
     }
-    else {
+    else 
+    {
         userDiscountList.forEach(
             function (m, index) {
                 if (m.projectid == model.projectid) {
@@ -324,9 +331,11 @@ export let getOrderInfo = async (req, res, next) => {
             }
         );
     }
+    */
 
     let orderWorkobj = await orderWorkModel.find({ orderid: req.query.orderid });
-
+    let groupobj = model.isGroupOrder ?  await groupHouseItemModel.findOne({ groupid: model.groupid}):null;
+ 
     let orderworks = orderWorkobj.map(m => {
         let result = {
             orderworkid: m.orderWorkid,
@@ -341,7 +350,7 @@ export let getOrderInfo = async (req, res, next) => {
         orderid: model.orderid,
         orderBaseInfo:
         {
-            orderContent: orderContent,
+            orderContent: model.orderContent ,
             orderTime: model.orderTime,
             orderStatus: model.orderStatus,
             orderAddress: model.orderAddress,
@@ -349,18 +358,17 @@ export let getOrderInfo = async (req, res, next) => {
             phoneNo:model.phoneNo
         },
         groupOrderInfo: model.isGroupOrder ? {
-            houseName: model.houseName,
-            groupService: service.gServiceItemName,
-            preAmount: model.preAmount
+            houseName:  groupobj?groupobj.houseName:null,
+            groupService: service.gServiceItemName
         } : null,
-        funditems:funditems,
+        fundItems:funditems,
         orderAmountInfo:
         {
             orderAmount: model.orderAmount,
-            preAmount: model.preAmount,
             paidAmount: model.paidAmount,
             paymentStatus: model.paymentStatus,
-            orderDiscountList: usrdiscounts
+            orderDiscountList: usrdiscounts,
+            surplusAmount: Number(model.orderAmount)-Number(paidAmount)
         },
         orderWorkList: orderworks
     }

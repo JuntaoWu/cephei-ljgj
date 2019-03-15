@@ -15,6 +15,8 @@ export class shotOrderItem {
 
   public contactsUserName: String;
 
+  public orderAddress: String;
+  
   public orderStatus: OrderStatus;
 
   public orderAmount: Number;
@@ -62,17 +64,14 @@ export class OrderItem extends Typegoose {
   public orderContent: String;
 
   @prop()
-  public groupContent: String;
-
-  @prop()
   public orderAddress: String;
 
   @prop()
   public gServiceItemid: String;
 
   @prop()
-  public houseName: String;
-
+  public groupid: String;
+  
   @prop()
   public orderDescription: String;
 
@@ -87,9 +86,6 @@ export class OrderItem extends Typegoose {
 
   @prop()
   public orderAmount: Number;
-
-  @prop()
-  public preAmount: Number;
 
   @prop()
   public paidAmount: Number;

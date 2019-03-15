@@ -13,7 +13,7 @@ export class groupHouse extends Typegoose {
     
     @prop()
     public groupid:string;
-
+    
     @prop()
     public houseid:string;
 
@@ -28,6 +28,9 @@ export class groupHouse extends Typegoose {
 
     @prop()
     public userJoinCount:Int32;
+
+    @prop()
+    public createTime:String;
 
     @prop()
     public groupServiceList:Array<groupServicesItem>;

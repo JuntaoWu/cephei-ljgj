@@ -39,7 +39,7 @@ export let getAllGroups = async (req, res, next) => {
 
     const { limit = 250, skip = 0 } = req.query;
 
-    let itemObj = await groupHouseItemModel.find().limit(limit).skip(skip);
+    let itemObj = await groupHouseItemModel.find().limit(limit).skip(skip).sort({'createTime': 'desc'});
     if (itemObj) {
         return res.json(itemObj);
     }
