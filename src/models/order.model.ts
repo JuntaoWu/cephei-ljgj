@@ -24,7 +24,7 @@ export class shotOrderItem {
   public craftsman: String;
 
   public paymentStatus: OrderPaymentStatus;
-
+  public isGroupOrder: boolean;
 }
 
 export enum OrderStatus {

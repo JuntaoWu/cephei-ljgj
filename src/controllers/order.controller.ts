@@ -172,6 +172,7 @@ export let getMyOrders = async (req, res, next) => {
     let shotOrders = model.map(m => {
         let result = new shotOrderItem();
         result.orderid = m.orderid;
+        result.isGroupOrder = m.isGroupOrder;
         result.orderContent = m.orderContent;
         result.phoneNo = m.phoneNo;
         result.contactsUserName = m.contactsUserName;

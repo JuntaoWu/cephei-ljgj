@@ -27,8 +27,6 @@ import groupServiceModel from '../models/groupService.model';
 import groupHouseItemModel, { groupServicesItem } from '../models/house.model';
 import groupRuleModel from '../models/groupRule.model';
 
-
-
 /**
  * 
  * @param req 获取所有团购小区列表
@@ -39,7 +37,7 @@ export let getAllGroups = async (req, res, next) => {
 
     const { limit = 250, skip = 0 } = req.query;
 
-    let itemObj = await groupHouseItemModel.find().limit(limit).skip(skip).sort({'createTime': 'desc'});
+    let itemObj = await groupHouseItemModel.find().limit(limit).skip(skip).sort({'createdAt': 'desc'});
     if (itemObj) {
         return res.json(itemObj);
     }
