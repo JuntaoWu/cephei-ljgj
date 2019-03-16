@@ -100,18 +100,14 @@ export let getOlderDetailInfo = async (req, res, next) => {
             orderStatus: model.orderStatus,
             orderAddress: model.orderAddress,
             contactsUserName: model.contactsUserName,
-            phoneNo: model.phoneNo
-        },
-        orderContract: ordercontracturls,
-        groupOrderInfo: model.isGroupOrder ? {
-            houseName: groupobj?groupobj.houseName:null,
-            groupService: model.orderContent
-        } : null,
-        orderWorkList: orderworks,
-        orderAmountInfo: {
             orderAmount: model.orderAmount,
             paymentStatus: model.paymentStatus,
-        }
+            phoneNo: model.phoneNo,
+            isGroupOrder:model.isGroupOrder,
+            houseName: groupobj?groupobj.houseName:null
+        },
+        orderContract: ordercontracturls,
+        orderWorkList: orderworks
     }
     return res.json({
         code: 0,
@@ -276,8 +272,5 @@ export let createOrderContract = async (req, res, next) => {
         }
     });
 };
-
-
-
 
 export default { list, load, getOlderDetailInfo, editOrderAmount, createOrderContract, appendOrderWorkToOrder, editOrderWorkToOrder, getOrderContract };

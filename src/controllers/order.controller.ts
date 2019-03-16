@@ -367,9 +367,9 @@ export let getOrderInfo = async (req, res, next) => {
         {
             orderAmount: model.orderAmount,
             paidAmount: model.paidAmount,
+            surplusAmount: Number(model.orderAmount) - Number(model.paidAmount),
             paymentStatus: model.paymentStatus,
-            orderDiscountList: usrdiscounts,
-            surplusAmount: Number(model.orderAmount)-Number(paidAmount)
+            orderDiscountList: usrdiscounts
         },
         orderWorkList: orderworks
     }
