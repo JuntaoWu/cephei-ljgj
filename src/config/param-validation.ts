@@ -172,5 +172,12 @@ editOrderWorkToOrder: {
         orderWorkid: Joi.string().required(),
     }
 }
+,
+createFeatureItem: {
+    body: {
+        featureItemTitle: Joi.string().required(),
+        featureItemThumbUrl: Joi.string().required()
+    }
+},
 
 };
