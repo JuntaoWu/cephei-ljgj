@@ -15,7 +15,7 @@ import * as httpStatus from 'http-status';
 export let createOneFundItem = async (req, res, next) => {
 
     let orderobj = await orderModel.findOne({ orderid: req.body.orderId });
-    if (orderobj.orderAmount <= 10 || req.body.fundItemAmount > orderobj.orderAmount) {
+    if (req.body.fundItemAmount > orderobj.orderAmount) {
         return res.json({
             error: true,
             message: "order status is initializing . or orderamount is error !",

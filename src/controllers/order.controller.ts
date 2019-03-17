@@ -11,7 +11,6 @@ import UserModel, { User } from '../models/user.model';
 import { NextFunction } from 'express-serve-static-core';
 
 import { ExtractJwt } from 'passport-jwt';
-
 import * as https from 'https';
 import * as http from 'http';
 import * as fs from 'fs';
@@ -21,7 +20,9 @@ import OrderReivewModel, { OrderReivew } from '../models/orderReview.model';
 import groupServiceModel from '../models/groupService.model';
 import orderDiscountModel from '../models/orderdiscount.model';
 import orderWorkModel from '../models/orderwork.model';
-
+import ProjectItemModel from '../models/project.model';
+import funditemModel from '../models/funditem.model';
+ 
 import groupHouseItemModel, { groupServicesItem } from '../models/house.model';
 import * as _ from 'lodash';
 
@@ -93,7 +94,15 @@ export let createOrder = async (req, res, next) => {
 export let getContract = async (req, res, next) => {
     let ordercontractObj = await orderContractModel.findOne({ orderid: req.query.orderid });
     if (ordercontractObj) {
-        return res.json(ordercontractObj);
+        return res.json({
+            contractid: ordercontractObj.contractid,
+            orderid: ordercontractObj.orderid,
+            contractUrls: ordercontractObj.contractUrls.map(i => {
+                return {
+                    cmgUrl: i
+                };
+            })
+        });
     }
     else {
         return res.json({
@@ -240,7 +249,6 @@ let getDiscountAmount = function (discoutnid, orderamount) {
     return disamount;
 }
 
-
 /*
     getOrderInfo :
     获取订单详情 
@@ -256,6 +264,29 @@ export let getOrderInfo = async (req, res, next) => {
             error: true,
             message: "have no order ! "
         });
+    }
+
+    let orderContent ;
+    if( model.orderContent != null)
+    {
+         orderContent = await ProjectItemModel.findOne({ projectid: model.orderContent });
+    }
+
+    let funditems = [] ;
+    if( req.query.orderid != null)
+    {
+        let funds = await funditemModel.find({ orderid: req.query.orderid });
+        if(!funds)
+        {   
+            funds.map(m => {
+                let result = {
+                    fundItemTitle: m.fundItemTitle,
+                    fundItemAmount: m.fundItemAmount,
+                    fundItemStatus: m.fundItemStatus
+                }
+                funditems.push(result);
+            });
+        }
     }
 
     let service = await groupServiceModel.findOne({ gServiceItemid: model.gServiceItemid });
@@ -310,7 +341,7 @@ export let getOrderInfo = async (req, res, next) => {
         orderid: model.orderid,
         orderBaseInfo:
         {
-            orderContent: model.orderContent,
+            orderContent: orderContent,
             orderTime: model.orderTime,
             orderStatus: model.orderStatus,
             orderAddress: model.orderAddress,
@@ -322,6 +353,7 @@ export let getOrderInfo = async (req, res, next) => {
             groupService: service.gServiceItemName,
             preAmount: model.preAmount
         } : null,
+        funditems:funditems,
         orderAmountInfo:
         {
             orderAmount: model.orderAmount,
