@@ -167,7 +167,14 @@ export let createUnifiedOrderByFundItem = async (req, res, next) => {
         status: PaymentStatus.Waiting,
         fundItemId: fundItem.fundItemId,
     });
-    await payment.save();
+    const savedPayment = await payment.save().catch(error => {
+        console.error(error);
+    });
+
+    if(!savedPayment) {
+        const err = new APIError('payment.save() error', httpStatus.INTERNAL_SERVER_ERROR, true);
+        return next(err);
+    }
 
     return res.json({
         code: 0,

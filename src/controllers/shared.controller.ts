@@ -97,7 +97,7 @@ export let getOlderDetailInfo = async (req, res, next) => {
             orderStatus: model.orderStatus,
             orderAddress: model.orderAddress,
             contactsUserName: model.contactsUserName,
-            phoneNo: model.phoneNo
+            phoneNo: model.phoneNo || model.createdBy,
         },
         orderContract: ordercontracturls,
         groupOrderInfo: model.isGroupOrder ? {
