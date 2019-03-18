@@ -76,15 +76,7 @@ export let getOlderDetailInfo = async (req, res, next) => {
 
     let groupobj = model.isGroupOrder ?  await groupHouseItemModel.findOne({ groupid: model.groupid}):null;
 
-    let orderworks = orderWorkobj.map(m => {
-        let result = {
-            orderworkid: m.orderWorkid,
-            orderWork: m.orderWork,
-            createTime: m.createTime
-        }
-        return result;
-    }
-    );
+    let orderworks = orderWorkobj;
     let orderContractobj = await orderContractModel.findOne({ orderid: req.params.orderId });
     let ordercontracturls;
     if (orderContractobj) {
@@ -100,14 +92,18 @@ export let getOlderDetailInfo = async (req, res, next) => {
             orderStatus: model.orderStatus,
             orderAddress: model.orderAddress,
             contactsUserName: model.contactsUserName,
-            orderAmount: model.orderAmount,
-            paymentStatus: model.paymentStatus,
-            phoneNo: model.phoneNo,
-            isGroupOrder:model.isGroupOrder,
-            houseName: groupobj?groupobj.houseName:null
+            phoneNo: model.phoneNo || model.createdBy
         },
         orderContract: ordercontracturls,
-        orderWorkList: orderworks
+        groupOrderInfo: model.isGroupOrder ? {
+            houseName:groupobj?groupobj.houseName:null,
+            groupService: model.orderContent
+        } : null,
+        orderWorkList: orderworks,
+        orderAmountInfo: {
+            orderAmount: model.orderAmount,
+            paymentStatus: model.paymentStatus
+        },
     }
     return res.json({
         code: 0,
