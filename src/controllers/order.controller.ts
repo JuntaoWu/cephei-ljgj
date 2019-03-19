@@ -271,7 +271,6 @@ export let getOrderInfo = async (req, res, next) => {
         });
     }
 
-    let paidAmount=0;
     let funditems = [] ;
     if( req.query.orderid != null)
     {
@@ -283,10 +282,6 @@ export let getOrderInfo = async (req, res, next) => {
                     fundItemTitle: m.fundItemTitle,
                     fundItemAmount: m.fundItemAmount,
                     fundItemStatus: m.fundItemStatus
-                }
-                if(m.fundItemStatus == FundStatus.Completed)
-                {
-                    paidAmount += Number(m.fundItemAmount);
                 }
                 funditems.push(result);
             });
