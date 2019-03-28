@@ -11,7 +11,7 @@ import { Request, Response, NextFunction } from 'express';
 import _ from 'lodash';
 import PaymentModel, { Payment, PaymentStatus } from '../models/payment.model';
 import OrderItemModel, { OrderStatus } from '../models/order.model';
-import { funditem } from '../models/funditem.model';
+import { funditem, FundStatus } from '../models/funditem.model';
 import funditemModel from '../models/funditem.model';
 
 const x2js = new X2JS();
@@ -171,7 +171,7 @@ export let createUnifiedOrderByFundItem = async (req, res, next) => {
         console.error(error);
     });
 
-    if(!savedPayment) {
+    if (!savedPayment) {
         const err = new APIError('payment.save() error', httpStatus.INTERNAL_SERVER_ERROR, true);
         return next(err);
     }
@@ -383,6 +383,219 @@ export let createUnifiedOrder = async (req, res, next) => {
         });
         await payment.save();
     }
+
+    return res.json({
+        code: 0,
+        message: "OK",
+        data: paymentParams
+    });
+};
+
+export let createUnifiedOrderByFundItemViaClient = async (req, res, next) => {
+
+    let user = req.user;
+
+    if (!user) {
+        const err = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true);
+        return next(err);
+    }
+
+    let wxOpenId = req.body.wxOpenId;
+    let tradeType = req.body.tradeType;
+
+    // check whether the order had been paid or not.
+    let orderItem = await OrderItemModel.findOne({
+        orderid: req.body.orderId
+    });
+    if (!orderItem || (orderItem.orderStatus != OrderStatus.Preparing && orderItem.orderStatus != OrderStatus.InProgress)) {
+        // Cannot find proper orderItem to pay.
+        const err = new APIError('Unable to find orderItem', httpStatus.NOT_FOUND, true);
+        return next(err);
+    }
+
+    let existingPayments = await PaymentModel.find({
+        orderId: req.body.orderId,
+    });
+
+    // Check if some payment status had not been updated.
+    const inCompletedPayments = existingPayments.filter(i => i.status != PaymentStatus.Completed);
+    // We'd like to await all of the queryUnifiedOrderAsync;
+    for (let i of inCompletedPayments) {
+        const wxPayment = await queryUnifiedOrderAsync({
+            transactionId: i.transactionId,
+            outTradeNo: i.outTradeNo,
+        });
+
+        if (!wxPayment) {
+            console.error("queryUnifiedOrderAsync failed.", i.transactionId, i.outTradeNo);
+            return;
+        }
+
+        const {
+            appid, mch_id, nonce_str, sign, return_code, result_code, err_code, err_code_des,
+            out_trade_no, attach,
+            device_info, openid, is_subscribe, trade_type, trade_state, bank_type, total_fee, settlement_total_fee, fee_type, cash_fee, cash_fee_type, coupon_fee, coupon_count, transaction_id, time_end, trade_state_desc,
+        } = wxPayment;
+
+        if (return_code == 'SUCCESS') {
+            if (err_code) {
+                console.error(err_code, err_code_des);
+                i.errCode = err_code;
+                i.errCodeDes = err_code_des;
+                if (i.errCode == 'ORDERNOTEXIST') {
+                    i.status = PaymentStatus.Exception;
+                }
+            }
+
+            if (result_code == 'SUCCESS') {
+                i.attach = attach;
+                if (trade_state == 'SUCCESS') {
+                    if (i.totalFee != total_fee) {
+                        // todo: error.
+                    }
+                    // todo: check the sign.
+                    // now update payment in db.
+                    i.nonceStr = nonce_str;
+                    i.openId = openid;
+                    i.isSubscribe = is_subscribe;
+                    i.tradeType = trade_type;
+                    i.bankType = bank_type;
+                    i.settlementTotalFee = settlement_total_fee;
+                    i.feeType = fee_type;
+                    i.cashFee = cash_fee;
+                    i.couponFee = coupon_fee;
+                    i.couponCount = coupon_count;
+                    i.transactionId = transaction_id;
+                    i.timeEnd = time_end;
+                    i.status = PaymentStatus.Completed;
+                }
+                else {
+                    switch (trade_state) {
+                        case 'NOTPAY':
+                        case 'USERPAYING':
+                            i.status = PaymentStatus.Waiting;
+                            break;
+                        case 'CLOSED':
+                        case 'REVOKED':
+                            i.status = PaymentStatus.Closed;
+                            break;
+                        case 'PAYERROR':
+                            i.status = PaymentStatus.Exception;
+                            break;
+                        case 'REFUND':
+                            // ...handle refund workflow.
+                            break;
+                    }
+                }
+            }
+
+            await i.save();
+        }
+    }
+
+    let fundItem = await funditemModel.findOne({
+        fundItemId: req.body.fundItemId,
+    });
+
+    if (!fundItem || (fundItem.fundItemStatus != FundStatus.Waiting)) {
+        // Cannot find proper orderItem to pay.
+        const err = new APIError('Unable to find orderItem', httpStatus.NOT_FOUND, true);
+        return next(err);
+    }
+
+    let paidAlready = _(existingPayments.filter(i => i.status == PaymentStatus.Completed)).sumBy("totalFee");
+    let totalFee = Math.floor(+orderItem.orderAmount * 100);
+    let remainTotalFee = totalFee - paidAlready;
+    console.log("paidAlready, totalFee, remainTotalFee:", paidAlready, totalFee, remainTotalFee);
+
+    if (remainTotalFee <= 0) {
+        // Cannot find proper orderItem to pay.
+        const err = new APIError('Total fee is 0.', httpStatus.NOT_FOUND, true);
+        return next(err);
+    }
+
+    let fundItemFee = Math.floor(+fundItem.fundItemAmount * 100);
+
+    let outTradeNo = `${orderItem.orderid}-${existingPayments.length}`;
+
+    const reqIP = req.headers['x-forwarded-for'] ||
+        req.connection.remoteAddress ||
+        req.socket.remoteAddress ||
+        req.connection.socket.remoteAddress;
+
+    let data = [];
+    let nonceStr = uuid().replace(/-/g, '');
+    let timeStart = moment().format("YYYYMMDDHHmmss");
+    let timeExpire = moment().add(15, "minutes").format("YYYYMMDDHHmmss");
+    data.push({ key: 'appid', value: config.wx.appId });
+    data.push({ key: 'mch_id', value: config.wx.mchId });
+    data.push({ key: 'device_info', value: 'WEB' });
+    data.push({ key: 'nonce_str', value: nonceStr });
+    data.push({ key: 'body', value: "邻家工匠-订单支付" });
+    data.push({ key: 'detail', value: "detail" });
+    data.push({ key: 'out_trade_no', value: outTradeNo });
+    data.push({ key: 'fee_type', value: "CNY" });
+    data.push({ key: 'total_fee', value: fundItemFee });
+    data.push({ key: 'spbill_create_ip', value: reqIP });
+    data.push({ key: 'time_start', value: timeStart });
+    data.push({ key: 'time_expire', value: timeExpire });
+    data.push({ key: 'goods_tag', value: orderItem.gServiceItemid });
+    data.push({ key: 'notify_url', value: config.wx.notifyUrl });
+    data.push({ key: 'trade_type', value: tradeType });
+    if (wxOpenId) {
+        data.push({ key: 'openid', value: wxOpenId });
+    }
+    data.push({ key: "sign_type", value: secureSignType });
+
+    const result = await requestUnifiedOrderAsync(data).catch(error => {
+        console.error(error);
+    });
+
+    if (!result || !result.prepay_id) {
+
+        if (result && result.err_code) {
+            console.error(result.err_code, result.err_code_des);
+            if (result.err_code == "ORDERPAID") {
+                // now change paymentModel's status.
+                // todo: check the sign.
+                let payment = await PaymentModel.findOne({ outTradeNo: outTradeNo });
+                payment.status = PaymentStatus.Completed;
+                // even we know it's paid already, but since we missed out the wxNotify, so we cannot track this payment anymore.
+                // todo: actively query wx payment via wxapi.
+                await payment.save();
+            }
+
+            const err = new APIError(result.err_code_des, httpStatus.INTERNAL_SERVER_ERROR, true);
+            return next(err);
+        }
+
+        const err = new APIError('requestUnifiedOrder error', httpStatus.INTERNAL_SERVER_ERROR, true);
+        return next(err);
+    }
+
+    // todo: create params for chooseWXPay
+    const paymentParams = await createWXPaymentParams(result).catch(error => {
+        console.error(error);
+    });
+
+    if (!paymentParams) {
+        const err = new APIError('createWXPaymentParams error', httpStatus.INTERNAL_SERVER_ERROR, true);
+        return next(err);
+    }
+
+    // save the current payment in db.
+    const payment = new PaymentModel({
+        appId: config.wx.appId,
+        feeType: "CNY",
+        mchId: config.wx.mchId,
+        openId: wxOpenId,
+        orderId: orderItem.orderid,
+        outTradeNo: outTradeNo,
+        totalFee: fundItemFee,
+        tradeType: tradeType,
+        status: PaymentStatus.Waiting,
+    });
+    await payment.save();
 
     return res.json({
         code: 0,

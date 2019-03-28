@@ -282,13 +282,15 @@ export let getOrderInfo = async (req, res, next) => {
         let funds = await funditemModel.find({ orderid: req.query.orderid });
         if(funds)
         {   
-            funds.map(m => {
+            funditems = funds.map(m => {
                 let result = {
+                    fundItemId: m.fundItemId,
                     fundItemTitle: m.fundItemTitle,
+                    fundItemType: m.fundItemType,
                     fundItemAmount: m.fundItemAmount,
                     fundItemStatus: m.fundItemStatus
                 }
-                funditems.push(result);
+                return result;
             });
         }
         else

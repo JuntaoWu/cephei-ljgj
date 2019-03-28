@@ -31,4 +31,7 @@ router.route('/wxNotify')
 router.route('/createUnifiedOrderByFundItem')
     .post(paymentCtrl.createUnifiedOrderByFundItem);
 
+router.route('/createUnifiedOrderByFundItemViaClient')
+    .post(paymentCtrl.createUnifiedOrderByFundItem);
+
 export default router;
