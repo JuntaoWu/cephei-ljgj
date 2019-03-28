@@ -403,9 +403,19 @@ export let createUnifiedOrderByFundItemViaClient = async (req, res, next) => {
     let wxOpenId = req.body.wxOpenId;
     let tradeType = req.body.tradeType;
 
+    let fundItem = await funditemModel.findOne({
+        fundItemId: req.body.fundItemId,
+    });
+
+    if (!fundItem || (fundItem.fundItemStatus != FundStatus.Waiting)) {
+        // Cannot find proper orderItem to pay.
+        const err = new APIError('Unable to find orderItem', httpStatus.NOT_FOUND, true);
+        return next(err);
+    }
+
     // check whether the order had been paid or not.
     let orderItem = await OrderItemModel.findOne({
-        orderid: req.body.orderId
+        orderid: fundItem.orderid
     });
     if (!orderItem || (orderItem.orderStatus != OrderStatus.Preparing && orderItem.orderStatus != OrderStatus.InProgress)) {
         // Cannot find proper orderItem to pay.
@@ -414,7 +424,7 @@ export let createUnifiedOrderByFundItemViaClient = async (req, res, next) => {
     }
 
     let existingPayments = await PaymentModel.find({
-        orderId: req.body.orderId,
+        orderId: orderItem.orderid,
     });
 
     // Check if some payment status had not been updated.
@@ -493,16 +503,6 @@ export let createUnifiedOrderByFundItemViaClient = async (req, res, next) => {
         }
     }
 
-    let fundItem = await funditemModel.findOne({
-        fundItemId: req.body.fundItemId,
-    });
-
-    if (!fundItem || (fundItem.fundItemStatus != FundStatus.Waiting)) {
-        // Cannot find proper orderItem to pay.
-        const err = new APIError('Unable to find orderItem', httpStatus.NOT_FOUND, true);
-        return next(err);
-    }
-
     let paidAlready = _(existingPayments.filter(i => i.status == PaymentStatus.Completed)).sumBy("totalFee");
     let totalFee = Math.floor(+orderItem.orderAmount * 100);
     let remainTotalFee = totalFee - paidAlready;
@@ -518,10 +518,12 @@ export let createUnifiedOrderByFundItemViaClient = async (req, res, next) => {
 
     let outTradeNo = `${orderItem.orderid}-${existingPayments.length}`;
 
-    const reqIP = req.headers['x-forwarded-for'] ||
+    let reqIP = req.headers['x-forwarded-for'] ||
         req.connection.remoteAddress ||
         req.socket.remoteAddress ||
         req.connection.socket.remoteAddress;
+
+    reqIP = reqIP.split(",")[0];
 
     let data = [];
     let nonceStr = uuid().replace(/-/g, '');
@@ -1034,4 +1036,4 @@ export let getWxSignature = async (req, res, next) => {
     });
 };
 
-export default { createWxConfig, createUnifiedOrderByFundItem, createUnifiedOrder, getWxSignature, wxNotify };
+export default { createWxConfig, createUnifiedOrderByFundItem, createUnifiedOrder, createUnifiedOrderByFundItemViaClient, getWxSignature, wxNotify };
