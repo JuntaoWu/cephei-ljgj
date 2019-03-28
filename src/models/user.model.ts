@@ -32,7 +32,7 @@ export class User extends Typegoose {
   public securityStamp?: String;
 
   @prop()
-  public discountList: Array<discount>;
+  public discountList: Object;
 
 }
 
