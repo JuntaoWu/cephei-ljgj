@@ -56,12 +56,17 @@ export let createOrder = async (req, res, next) => {
     let groupHouseObj;
     if(req.body.isGroupOrder)
     {
-            gservice = await groupServiceModel.findOne({ gServiceItemid: req.body.gServiceItemid });
-            groupHouseObj = await groupHouseItemModel.findOne({groupid:req.body.groupid});
+        gservice = await groupServiceModel.findOne({ gServiceItemid: req.body.gServiceItemid });
+        groupHouseObj = await groupHouseItemModel.findOne({groupid:req.body.groupid});
+        let updateJoinNo = await groupHouseItemModel.update({ "groupid": req.body.groupid }, { "userJoinCount":Number( groupHouseObj.userJoinCount )+1 });
+        if(updateJoinNo!= null)
+        {
+            
+        }
     }
     else
     {
-            gservice = await ProjectItemModel.findOne({ projectid: req.body.projectid });
+        gservice = await ProjectItemModel.findOne({ projectid: req.body.projectid });
     }
 
     let orderid = "ORDER_" + _.random(1000, 9999) + "_" + moment(new Date()).format("YYYYMMDDHHmm");//("YYYYMMDDHHmm");
@@ -275,7 +280,7 @@ export let getOrderInfo = async (req, res, next) => {
     if( req.query.orderid != null)
     {
         let funds = await funditemModel.find({ orderid: req.query.orderid });
-        if(!funds)
+        if(funds)
         {   
             funds.map(m => {
                 let result = {
@@ -285,6 +290,10 @@ export let getOrderInfo = async (req, res, next) => {
                 }
                 funditems.push(result);
             });
+        }
+        else
+        {
+            funditems = null;
         }
     }
 
