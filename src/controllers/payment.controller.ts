@@ -710,45 +710,45 @@ function getSignature(data: any[], apiKey: string, signType: string = secureSign
 
     signType = signType.toUpperCase();
 
-    const dataToSign = data.filter(m => !!m && !!m.value).sort((l, r) => l.key < r.key ? -1 : 1).map(m => `${m.key}=${m.value}`).join("&");
+    const dataToSign = data.filter(m => !!m && !!m.value).sort((l, r) => l.key < r.key ? -1 : 1).map(m => `${m.key}=${m.value}`).join('&');
     const dataToSignWithApiKey = dataToSign + `&key=${apiKey}`;
 
-    console.log("dataToSignWithApiKey:", dataToSignWithApiKey);
+    console.log('dataToSignWithApiKey:', dataToSignWithApiKey);
 
     if (signType == secureSignType) {
-        const hmac = createHmac("sha256", apiKey);
-        const signature = hmac.update(dataToSignWithApiKey).digest("hex").toUpperCase();
-        console.log("signature:", signature);
+        const hmac = createHmac('sha256', apiKey);
+        const signature = hmac.update(dataToSignWithApiKey).digest('hex').toUpperCase();
+        console.log('signature:', signature);
         return signature;
     }
     else {
         const hash = createHash(signType);
-        const signature = hash.update(dataToSignWithApiKey).digest("hex").toUpperCase();
-        console.log("signature:", signature);
+        const signature = hash.update(dataToSignWithApiKey).digest('hex').toUpperCase();
+        console.log('signature:', signature);
         return signature;
     }
 }
 
 async function getSandboxKeyAsync(): Promise<string> {
     // https://api.mch.weixin.qq.com/sandboxnew/pay/getsignkey
-    const hostname = "api.mch.weixin.qq.com";
-    const path = "/sandboxnew/pay/getsignkey";
+    const hostname = 'api.mch.weixin.qq.com';
+    const path = '/sandboxnew/pay/getsignkey';
 
     return new Promise<string>((resolve, reject) => {
         const request = https.request({
             hostname: hostname,
             port: 443,
             path: path,
-            method: "POST",
+            method: 'POST',
         }, (wxRes) => {
-            console.log("response from wx api.");
+            console.log('response from wx api.');
 
-            let wxData = "";
-            wxRes.on("data", (chunk) => {
+            let wxData = '';
+            wxRes.on('data', (chunk) => {
                 wxData += chunk;
             });
 
-            wxRes.on("end", async () => {
+            wxRes.on('end', async () => {
                 const result = x2js.xml2js(wxData) as any;
                 return resolve(result.xml.sandbox_signkey);
             });
@@ -757,13 +757,13 @@ async function getSandboxKeyAsync(): Promise<string> {
         const nonceStr = uuid().replace(/-/g, '');
 
         const data = [];
-        data.push({ key: "mch_id", value: config.wx.mchId });
-        data.push({ key: "nonce_str", value: nonceStr });
-        data.push({ key: "sign_type", value: secureSignType });
+        data.push({ key: 'mch_id', value: config.wx.mchId });
+        data.push({ key: 'nonce_str', value: nonceStr });
+        data.push({ key: 'sign_type', value: secureSignType });
 
         const signature = getSignature(data, config.wx.mchKey);
 
-        data.push({ key: "sign", value: signature });
+        data.push({ key: 'sign', value: signature });
 
         const xmlData = x2js.js2xml({
             xml: {
@@ -781,9 +781,9 @@ async function requestUnifiedOrderAsync(data: any[]): Promise<any> {
 
     const signature = await getSignatureBasedOnEnv(data);
 
-    data.push({ key: "sign", value: signature });
+    data.push({ key: 'sign', value: signature });
 
-    const hostname = "api.mch.weixin.qq.com";
+    const hostname = 'api.mch.weixin.qq.com';
     const path = config.wx.sandbox ? `/sandboxnew/pay/unifiedorder` : `/pay/unifiedorder`;
     console.log(hostname, path);
 
@@ -792,16 +792,16 @@ async function requestUnifiedOrderAsync(data: any[]): Promise<any> {
             hostname: hostname,
             port: 443,
             path: path,
-            method: "POST",
+            method: 'POST',
         }, (wxRes) => {
-            console.log("response from wx api.");
+            console.log('response from wx api.');
 
-            let wxData = "";
-            wxRes.on("data", (chunk) => {
+            let wxData = '';
+            wxRes.on('data', (chunk) => {
                 wxData += chunk;
             });
 
-            wxRes.on("end", async () => {
+            wxRes.on('end', async () => {
                 try {
                     const result = x2js.xml2js(wxData) as any;
 
@@ -821,7 +821,7 @@ async function requestUnifiedOrderAsync(data: any[]): Promise<any> {
                      */
                     const { appid, device_info, mch_id, nonce_str, prepay_id, result_code, return_code, return_msg, sign, trade_type, err_code, err_code_des, mweb_url } = result.xml;
 
-                    if (result_code !== "SUCCESS" && return_code !== "SUCCESS") {
+                    if (result_code !== 'SUCCESS' && return_code !== 'SUCCESS') {
                         return reject(result.xml);
                     }
                     else {
@@ -833,7 +833,7 @@ async function requestUnifiedOrderAsync(data: any[]): Promise<any> {
             });
         });
 
-        const dataToPost = data.map(m => `<${m.key}>${m.value}</${m.key}>`).join("");
+        const dataToPost = data.map(m => `<${m.key}>${m.value}</${m.key}>`).join('');
         console.log(dataToPost);
         request.end(`<xml>${dataToPost}</xml>`);
     });
@@ -853,7 +853,7 @@ async function queryUnifiedOrderAsync(orderInfo): Promise<any> {
         data.push({ key: 'out_trade_no', value: orderInfo.outTradeNo });
     }
     data.push({ key: 'nonce_str', value: nonceStr });
-    data.push({ key: "sign_type", value: signType });
+    data.push({ key: 'sign_type', value: signType });
 
     const signature = await getSignatureBasedOnEnv(data, signType);
 
@@ -872,29 +872,29 @@ async function queryUnifiedOrderAsync(orderInfo): Promise<any> {
     }
 
     // https://api.mch.weixin.qq.com/pay/orderquery
-    const hostname = "api.mch.weixin.qq.com";
-    const path = "/pay/orderquery";
+    const hostname = 'api.mch.weixin.qq.com';
+    const path = '/pay/orderquery';
 
     return new Promise<string>((resolve, reject) => {
         const request = https.request({
             hostname: hostname,
             port: 443,
             path: path,
-            method: "POST",
+            method: 'POST',
         }, (wxRes) => {
-            console.log("response from wx api.");
+            console.log('response from wx api.');
 
-            let wxData = "";
-            wxRes.on("data", (chunk) => {
+            let wxData = '';
+            wxRes.on('data', (chunk) => {
                 wxData += chunk;
             });
 
-            wxRes.on("end", async () => {
+            wxRes.on('end', async () => {
                 const result = x2js.xml2js(wxData) as any;
                 return resolve(result.xml);
             });
 
-            wxRes.on("error", (error) => {
+            wxRes.on('error', (error) => {
                 return reject(error);
             });
         });
@@ -922,16 +922,16 @@ async function getSignatureBasedOnEnv(data, signType?: string) {
 async function createWXPaymentParams(payload) {
     const packageStr = `prepay_id=${payload.prepay_id}`;
     const timestamp = Math.floor(+new Date() / 1000).toString();
-    const nonceStr = uuid().replace(/-/g, "");
+    const nonceStr = uuid().replace(/-/g, '');
     const signType = secureSignType;
 
     const data = [];
-    data.push({ key: "appId", value: config.wx.appId });
+    data.push({ key: 'appId', value: config.wx.appId });
     // ***danger! WTF... 微信jssdk中的所有使用timestamp字段均为小写。但最新版的支付后台生成签名使用的timeStamp字段名需大写其中的S字符
-    data.push({ key: "timeStamp", value: timestamp });
-    data.push({ key: "nonceStr", value: nonceStr });
-    data.push({ key: "package", value: packageStr });
-    data.push({ key: "signType", value: signType });
+    data.push({ key: 'timeStamp', value: timestamp });
+    data.push({ key: 'nonceStr', value: nonceStr });
+    data.push({ key: 'package', value: packageStr });
+    data.push({ key: 'signType', value: signType });
 
     const signature = await getSignatureBasedOnEnv(data, signType);
 
@@ -954,8 +954,8 @@ async function createWxSignatureAsync(payload) {
         return;
     }
 
-    payload.push({ key: "jsapi_ticket", value: ticket });
-    const urlIndex = (payload as any[]).findIndex(i => i.key == "url");
+    payload.push({ key: 'jsapi_ticket', value: ticket });
+    const urlIndex = (payload as any[]).findIndex(i => i.key == 'url');
     if (urlIndex != -1) {
         payload[urlIndex].value = decodeURIComponent(payload[urlIndex].value);
     }
@@ -966,7 +966,7 @@ async function createWxSignatureAsync(payload) {
 }
 
 export let getWxSignature = async (req, res, next) => {
-    console.log("getWxSignature", req.body.payload);
+    console.log('getWxSignature', req.body.payload);
 
     const data = req.body.payload;
     const signature = await createWxSignatureAsync(data).catch(error => {
@@ -974,13 +974,13 @@ export let getWxSignature = async (req, res, next) => {
     });
 
     if (!signature) {
-        const err = new APIError("createWxSignature error", httpStatus.INTERNAL_SERVER_ERROR);
+        const err = new APIError('createWxSignature error', httpStatus.INTERNAL_SERVER_ERROR);
         return next(err);
     }
 
     return res.json({
         code: 0,
-        message: "OK",
+        message: 'OK',
         data: {
             signature: signature
         }
