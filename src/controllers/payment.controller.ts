@@ -13,6 +13,7 @@ import PaymentModel, { Payment, PaymentStatus } from '../models/payment.model';
 import OrderItemModel, { OrderStatus } from '../models/order.model';
 import { funditem, FundStatus } from '../models/funditem.model';
 import funditemModel from '../models/funditem.model';
+import { DocumentQuery } from 'mongoose';
 
 const x2js = new X2JS();
 const secureSignType = 'HMAC-SHA256';
@@ -54,7 +55,7 @@ export let createWxConfig = async (req, res, next) => {
 export let createUnifiedOrderByFundItem = async (req, res, next) => {
     const tradeType = 'NATIVE';
     // check whether the order had been paid or not.
-    let fundItem: funditem = await funditemModel.findOne({
+    const fundItem: funditem = await funditemModel.findOne({
         fundItemId: req.body.fundItemId
     });
     if (!fundItem) {
@@ -64,22 +65,22 @@ export let createUnifiedOrderByFundItem = async (req, res, next) => {
     }
 
     // check whether the order had been paid or not.
-    let orderItem = await OrderItemModel.findOne({
+    const orderItem = await OrderItemModel.findOne({
         orderid: fundItem.orderid
     });
     if (!orderItem || (orderItem.orderStatus != OrderStatus.Preparing && orderItem.orderStatus != OrderStatus.InProgress)) {
         // Cannot find proper orderItem to pay.
-        const err = new APIError('Unable to find orderItem', httpStatus.NOT_FOUND, true);
+        const err = new APIError('Unable to find orderItem to pay.', httpStatus.NOT_FOUND, true);
         return next(err);
     }
 
-    let existingPayments = await PaymentModel.find({
+    const existingPayments = await PaymentModel.find({
         orderId: orderItem.orderid,
     });
 
-    let paidAlready = _(existingPayments.filter(i => i.status == PaymentStatus.Completed)).sumBy("totalFee");
-    let totalFee = Math.floor(+orderItem.orderAmount * 100);
-    let remainTotalFee = totalFee - paidAlready;
+    const paidAlready = _(existingPayments.filter(i => i.status == PaymentStatus.Completed)).sumBy("totalFee");
+    const totalFee = Math.floor(+orderItem.orderAmount * 100);
+    const remainTotalFee = totalFee - paidAlready;
     console.log("paidAlready, totalFee, remainTotalFee:", paidAlready, totalFee, remainTotalFee);
 
     if (remainTotalFee <= 0) {
@@ -88,18 +89,18 @@ export let createUnifiedOrderByFundItem = async (req, res, next) => {
         return next(err);
     }
 
-    let fundItemFeeToPay = Math.floor(+fundItem.fundItemAmount * 100);
-    let outTradeNo = `${orderItem.orderid}-${existingPayments.length}`;
+    const fundItemFeeToPay = Math.floor(+fundItem.fundItemAmount * 100);
+    const outTradeNo = `${orderItem.orderid}-${existingPayments.length}`;
 
     const reqIP = req.headers['x-forwarded-for'] ||
         req.connection.remoteAddress ||
         req.socket.remoteAddress ||
         req.connection.socket.remoteAddress;
 
-    let data = [];
-    let nonceStr = uuid().replace(/-/g, '');
-    let timeStart = moment().format("YYYYMMDDHHmmss");
-    let timeExpire = moment().add(15, "minutes").format("YYYYMMDDHHmmss");
+    const data = [];
+    const nonceStr = uuid().replace(/-/g, '');
+    const timeStart = moment().format("YYYYMMDDHHmmss");
+    const timeExpire = moment().add(15, "minutes").format("YYYYMMDDHHmmss");
     data.push({ key: 'appid', value: config.wx.appId });
     data.push({ key: 'mch_id', value: config.wx.mchId });
     data.push({ key: 'device_info', value: 'NATIVE' });
@@ -129,7 +130,7 @@ export let createUnifiedOrderByFundItem = async (req, res, next) => {
             if (result.err_code == "ORDERPAID") {
                 // now change paymentModel's status.
                 // todo: check the sign.
-                let payment = await PaymentModel.findOne({ outTradeNo: outTradeNo });
+                const payment = await PaymentModel.findOne({ outTradeNo: outTradeNo });
                 payment.status = PaymentStatus.Completed;
                 // even we know it's paid already, but since we missed out the wxNotify, so we cannot track this payment anymore.
                 // todo: actively query wx payment via wxapi.
@@ -181,114 +182,41 @@ export let createUnifiedOrderByFundItem = async (req, res, next) => {
         message: "OK",
         data: result.code_url
     });
-}
+};
 
 export let createUnifiedOrder = async (req, res, next) => {
 
-    let user = req.user;
+    // *Step 1: check user
+
+    const user = req.user;
 
     if (!user) {
         const err = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true);
         return next(err);
     }
 
-    let wxOpenId = req.body.wxOpenId;
-    let tradeType = req.body.tradeType;
+    const { wxOpenId, tradeType, orderId } = req.body;
 
     // check whether the order had been paid or not.
-    let orderItem = await OrderItemModel.findOne({
-        orderid: req.body.orderId
+    const orderItem = await OrderItemModel.findOne({
+        orderid: orderId
     });
     if (!orderItem || (orderItem.orderStatus != OrderStatus.Preparing && orderItem.orderStatus != OrderStatus.InProgress)) {
         // Cannot find proper orderItem to pay.
-        const err = new APIError('Unable to find orderItem', httpStatus.NOT_FOUND, true);
+        const err = new APIError('Unable to find orderItem to pay.', httpStatus.NOT_FOUND, true);
         return next(err);
     }
 
-    let existingPayments = await PaymentModel.find({
-        orderId: req.body.orderId,
+    // *Step 2: check payments
+    const existingPayments = await PaymentModel.find({
+        orderId: orderId,
     });
+    await checkIncompletePayments(existingPayments);
 
-    // Check if some payment status had not been updated.
-    const inCompletedPayments = existingPayments.filter(i => i.status != PaymentStatus.Completed);
-    // We'd like to await all of the queryUnifiedOrderAsync;
-    for (let i of inCompletedPayments) {
-        const wxPayment = await queryUnifiedOrderAsync({
-            transactionId: i.transactionId,
-            outTradeNo: i.outTradeNo,
-        });
-
-        if (!wxPayment) {
-            console.error("queryUnifiedOrderAsync failed.", i.transactionId, i.outTradeNo);
-            return;
-        }
-
-        const {
-            appid, mch_id, nonce_str, sign, return_code, result_code, err_code, err_code_des,
-            out_trade_no, attach,
-            device_info, openid, is_subscribe, trade_type, trade_state, bank_type, total_fee, settlement_total_fee, fee_type, cash_fee, cash_fee_type, coupon_fee, coupon_count, transaction_id, time_end, trade_state_desc,
-        } = wxPayment;
-
-        if (return_code == 'SUCCESS') {
-            if (err_code) {
-                console.error(err_code, err_code_des);
-                i.errCode = err_code;
-                i.errCodeDes = err_code_des;
-                if (i.errCode == 'ORDERNOTEXIST') {
-                    i.status = PaymentStatus.Exception;
-                }
-            }
-
-            if (result_code == 'SUCCESS') {
-                i.attach = attach;
-                if (trade_state == 'SUCCESS') {
-                    if (i.totalFee != total_fee) {
-                        // todo: error.
-                    }
-                    // todo: check the sign.
-                    // now update payment in db.
-                    i.nonceStr = nonce_str;
-                    i.openId = openid;
-                    i.isSubscribe = is_subscribe;
-                    i.tradeType = trade_type;
-                    i.bankType = bank_type;
-                    i.settlementTotalFee = settlement_total_fee;
-                    i.feeType = fee_type;
-                    i.cashFee = cash_fee;
-                    i.couponFee = coupon_fee;
-                    i.couponCount = coupon_count;
-                    i.transactionId = transaction_id;
-                    i.timeEnd = time_end;
-                    i.status = PaymentStatus.Completed;
-                }
-                else {
-                    switch (trade_state) {
-                        case 'NOTPAY':
-                        case 'USERPAYING':
-                            i.status = PaymentStatus.Waiting;
-                            break;
-                        case 'CLOSED':
-                        case 'REVOKED':
-                            i.status = PaymentStatus.Closed;
-                            break;
-                        case 'PAYERROR':
-                            i.status = PaymentStatus.Exception;
-                            break;
-                        case 'REFUND':
-                            // ...handle refund workflow.
-                            break;
-                    }
-                }
-            }
-
-            await i.save();
-        }
-    }
-
-    let paidAlready = _(existingPayments.filter(i => i.status == PaymentStatus.Completed)).sumBy("totalFee");
-    let totalFee = Math.floor(+orderItem.orderAmount * 100);
-    let remainTotalFee = totalFee - paidAlready;
-    console.log("paidAlready, totalFee, remainTotalFee:", paidAlready, totalFee, remainTotalFee);
+    const paidAlready = _(existingPayments.filter(i => i.status == PaymentStatus.Completed)).sumBy("totalFee");
+    const totalFee = Math.floor(+orderItem.orderAmount * 100);
+    const remainTotalFee = totalFee - paidAlready;
+    console.log('paidAlready, totalFee, remainTotalFee:', paidAlready, totalFee, remainTotalFee);
 
     if (remainTotalFee <= 0) {
         // Cannot find proper orderItem to pay.
@@ -296,22 +224,25 @@ export let createUnifiedOrder = async (req, res, next) => {
         return next(err);
     }
 
-    let waitingPayment = existingPayments.filter(i => i.status == PaymentStatus.Waiting).find(i => i.totalFee == remainTotalFee);
+    // *Step 3: check waiting payment for outTradeNo
+    const waitingPayment = existingPayments.filter(i => i.status == PaymentStatus.Waiting).find(i => i.totalFee == remainTotalFee);
 
-    let outTradeNo = `${orderItem.orderid}-${existingPayments.length}`;
+    let outTradeNo = `${+new Date()}-${_.random(1000, 9999)}`;
     if (waitingPayment) {
         outTradeNo = waitingPayment.outTradeNo.toString();
     }
 
-    const reqIP = req.headers['x-forwarded-for'] ||
+    let reqIP = req.headers['x-forwarded-for'] ||
         req.connection.remoteAddress ||
         req.socket.remoteAddress ||
         req.connection.socket.remoteAddress;
 
-    let data = [];
-    let nonceStr = uuid().replace(/-/g, '');
-    let timeStart = moment().format("YYYYMMDDHHmmss");
-    let timeExpire = moment().add(15, "minutes").format("YYYYMMDDHHmmss");
+    reqIP = reqIP && reqIP.split(',')[0];
+
+    const data = [];
+    const nonceStr = uuid().replace(/-/g, '');
+    const timeStart = moment().format("YYYYMMDDHHmmss");
+    const timeExpire = moment().add(15, "minutes").format("YYYYMMDDHHmmss");
     data.push({ key: 'appid', value: config.wx.appId });
     data.push({ key: 'mch_id', value: config.wx.mchId });
     data.push({ key: 'device_info', value: 'WEB' });
@@ -343,7 +274,7 @@ export let createUnifiedOrder = async (req, res, next) => {
             if (result.err_code == "ORDERPAID") {
                 // now change paymentModel's status.
                 // todo: check the sign.
-                let payment = await PaymentModel.findOne({ outTradeNo: outTradeNo });
+                const payment = await PaymentModel.findOne({ outTradeNo: outTradeNo });
                 payment.status = PaymentStatus.Completed;
                 // even we know it's paid already, but since we missed out the wxNotify, so we cannot track this payment anymore.
                 // todo: actively query wx payment via wxapi.
@@ -391,53 +322,21 @@ export let createUnifiedOrder = async (req, res, next) => {
     });
 };
 
-export let createUnifiedOrderByFundItemViaClient = async (req, res, next) => {
-
-    let user = req.user;
-
-    if (!user) {
-        const err = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true);
-        return next(err);
-    }
-
-    let wxOpenId = req.body.wxOpenId;
-    let tradeType = req.body.tradeType;
-
-    let fundItem = await funditemModel.findOne({
-        fundItemId: req.body.fundItemId,
-    });
-
-    if (!fundItem || (fundItem.fundItemStatus != FundStatus.Waiting)) {
-        // Cannot find proper orderItem to pay.
-        const err = new APIError('Unable to find orderItem', httpStatus.NOT_FOUND, true);
-        return next(err);
-    }
-
-    // check whether the order had been paid or not.
-    let orderItem = await OrderItemModel.findOne({
-        orderid: fundItem.orderid
-    });
-    if (!orderItem || (orderItem.orderStatus != OrderStatus.Preparing && orderItem.orderStatus != OrderStatus.InProgress)) {
-        // Cannot find proper orderItem to pay.
-        const err = new APIError('Unable to find orderItem', httpStatus.NOT_FOUND, true);
-        return next(err);
-    }
-
-    let existingPayments = await PaymentModel.find({
-        orderId: orderItem.orderid,
-    });
+async function checkIncompletePayments(existingPayments: any[]) {
 
     // Check if some payment status had not been updated.
     const inCompletedPayments = existingPayments.filter(i => i.status != PaymentStatus.Completed);
     // We'd like to await all of the queryUnifiedOrderAsync;
-    for (let i of inCompletedPayments) {
+    for (const i of inCompletedPayments) {
         const wxPayment = await queryUnifiedOrderAsync({
             transactionId: i.transactionId,
             outTradeNo: i.outTradeNo,
+        }).catch((error) => {
+            console.error(error);
         });
 
         if (!wxPayment) {
-            console.error("queryUnifiedOrderAsync failed.", i.transactionId, i.outTradeNo);
+            console.error('queryUnifiedOrderAsync failed.', i.transactionId, i.outTradeNo);
             return;
         }
 
@@ -502,33 +401,78 @@ export let createUnifiedOrderByFundItemViaClient = async (req, res, next) => {
             await i.save();
         }
     }
+}
 
-    let paidAlready = _(existingPayments.filter(i => i.status == PaymentStatus.Completed)).sumBy("totalFee");
-    let totalFee = Math.floor(+orderItem.orderAmount * 100);
-    let remainTotalFee = totalFee - paidAlready;
-    console.log("paidAlready, totalFee, remainTotalFee:", paidAlready, totalFee, remainTotalFee);
+export let createUnifiedOrderByFundItemViaClient = async (req, res, next) => {
 
-    if (remainTotalFee <= 0) {
+    // *Step 1: check user
+    const user = req.user;
+
+    if (!user) {
+        const err = new APIError('Authentication error', httpStatus.UNAUTHORIZED, true);
+        return next(err);
+    }
+
+    const wxOpenId = req.body.wxOpenId;
+    const tradeType = req.body.tradeType;
+
+    const fundItem = await funditemModel.findOne({
+        fundItemId: req.body.fundItemId,
+    });
+
+    if (!fundItem || (fundItem.fundItemStatus != FundStatus.Waiting)) {
+        // Cannot find proper orderItem to pay.
+        const err = new APIError('Unable to find orderItem to pay.', httpStatus.NOT_FOUND, true);
+        return next(err);
+    }
+
+    // check whether the order had been paid or not.
+    const orderItem = await OrderItemModel.findOne({
+        orderid: fundItem.orderid
+    });
+    if (!orderItem || (orderItem.orderStatus != OrderStatus.Preparing && orderItem.orderStatus != OrderStatus.InProgress)) {
+        // Cannot find proper orderItem to pay.
+        const err = new APIError('Unable to find orderItem to pay.', httpStatus.NOT_FOUND, true);
+        return next(err);
+    }
+
+    // *Step 2: check payments
+    const existingPayments = await PaymentModel.find({
+        orderId: orderItem.orderid,
+    });
+
+    await checkIncompletePayments(existingPayments);
+
+    const paidAlready = _(existingPayments.filter(i => i.status == PaymentStatus.Completed)).sumBy("totalFee");
+    const totalFee = Math.floor(+orderItem.orderAmount * 100);
+    const remainTotalFee = totalFee - paidAlready;
+    const fundItemFee = Math.floor(+fundItem.fundItemAmount * 100);
+    console.log('paidAlready, totalFee, remainTotalFee:', paidAlready, totalFee, remainTotalFee);
+
+    if (remainTotalFee <= 0 || fundItemFee <= 0) {
         // Cannot find proper orderItem to pay.
         const err = new APIError('Total fee is 0.', httpStatus.NOT_FOUND, true);
         return next(err);
     }
 
-    let fundItemFee = Math.floor(+fundItem.fundItemAmount * 100);
+    // *Step 3: check waiting payment for outTradeNo
+    const waitingPayment = existingPayments.filter(i => i.status == PaymentStatus.Waiting).find(i => i.fundItemId == fundItem.fundItemId);
 
-    let outTradeNo = `${orderItem.orderid}-${existingPayments.length}`;
+    let outTradeNo = `${+new Date()}-${_.random(1000, 9999)}`;
+    if (waitingPayment) {
+        outTradeNo = waitingPayment.outTradeNo.toString();
+    }
 
     let reqIP = req.headers['x-forwarded-for'] ||
         req.connection.remoteAddress ||
         req.socket.remoteAddress ||
         req.connection.socket.remoteAddress;
+    reqIP = reqIP && reqIP.split(',')[0];
 
-    reqIP = reqIP.split(",")[0];
-
-    let data = [];
-    let nonceStr = uuid().replace(/-/g, '');
-    let timeStart = moment().format("YYYYMMDDHHmmss");
-    let timeExpire = moment().add(15, "minutes").format("YYYYMMDDHHmmss");
+    const data = [];
+    const nonceStr = uuid().replace(/-/g, '');
+    const timeStart = moment().format("YYYYMMDDHHmmss");
+    const timeExpire = moment().add(15, "minutes").format("YYYYMMDDHHmmss");
     data.push({ key: 'appid', value: config.wx.appId });
     data.push({ key: 'mch_id', value: config.wx.mchId });
     data.push({ key: 'device_info', value: 'WEB' });
@@ -560,7 +504,7 @@ export let createUnifiedOrderByFundItemViaClient = async (req, res, next) => {
             if (result.err_code == "ORDERPAID") {
                 // now change paymentModel's status.
                 // todo: check the sign.
-                let payment = await PaymentModel.findOne({ outTradeNo: outTradeNo });
+                const payment = await PaymentModel.findOne({ outTradeNo: outTradeNo });
                 payment.status = PaymentStatus.Completed;
                 // even we know it's paid already, but since we missed out the wxNotify, so we cannot track this payment anymore.
                 // todo: actively query wx payment via wxapi.
@@ -585,23 +529,26 @@ export let createUnifiedOrderByFundItemViaClient = async (req, res, next) => {
         return next(err);
     }
 
-    // save the current payment in db.
-    const payment = new PaymentModel({
-        appId: config.wx.appId,
-        feeType: "CNY",
-        mchId: config.wx.mchId,
-        openId: wxOpenId,
-        orderId: orderItem.orderid,
-        outTradeNo: outTradeNo,
-        totalFee: fundItemFee,
-        tradeType: tradeType,
-        status: PaymentStatus.Waiting,
-    });
-    await payment.save();
+    if (!waitingPayment) {
+        // save the current payment in db.
+        const payment = new PaymentModel({
+            appId: config.wx.appId,
+            feeType: "CNY",
+            mchId: config.wx.mchId,
+            openId: wxOpenId,
+            orderId: orderItem.orderid,
+            outTradeNo: outTradeNo,
+            totalFee: remainTotalFee,
+            tradeType: tradeType,
+            status: PaymentStatus.Waiting,
+            fundItemId: fundItem.fundItemId,
+        });
+        await payment.save();
+    }
 
     return res.json({
         code: 0,
-        message: "OK",
+        message: 'OK',
         data: paymentParams
     });
 };
@@ -657,7 +604,7 @@ export let wxNotify = async (req: Request, res: Response, next: NextFunction) =>
                 err_code, err_code_des,
             } = result.xml;
 
-            let returnData =
+            const returnData =
                 `<xml>
                     <return_code><![CDATA[SUCCESS]]></return_code>
                     <return_msg><![CDATA[OK]]></return_msg>
@@ -763,20 +710,20 @@ function getSignature(data: any[], apiKey: string, signType: string = secureSign
 
     signType = signType.toUpperCase();
 
-    let dataToSign = data.filter(m => !!m && !!m.value).sort((l, r) => l.key < r.key ? -1 : 1).map(m => `${m.key}=${m.value}`).join("&");
-    let dataToSignWithApiKey = dataToSign + `&key=${apiKey}`;
+    const dataToSign = data.filter(m => !!m && !!m.value).sort((l, r) => l.key < r.key ? -1 : 1).map(m => `${m.key}=${m.value}`).join("&");
+    const dataToSignWithApiKey = dataToSign + `&key=${apiKey}`;
 
     console.log("dataToSignWithApiKey:", dataToSignWithApiKey);
 
     if (signType == secureSignType) {
-        let hmac = createHmac("sha256", apiKey);
-        let signature = hmac.update(dataToSignWithApiKey).digest("hex").toUpperCase();
+        const hmac = createHmac("sha256", apiKey);
+        const signature = hmac.update(dataToSignWithApiKey).digest("hex").toUpperCase();
         console.log("signature:", signature);
         return signature;
     }
     else {
-        let hash = createHash(signType);
-        let signature = hash.update(dataToSignWithApiKey).digest("hex").toUpperCase();
+        const hash = createHash(signType);
+        const signature = hash.update(dataToSignWithApiKey).digest("hex").toUpperCase();
         console.log("signature:", signature);
         return signature;
     }
@@ -788,7 +735,7 @@ async function getSandboxKeyAsync(): Promise<string> {
     const path = "/sandboxnew/pay/getsignkey";
 
     return new Promise<string>((resolve, reject) => {
-        let request = https.request({
+        const request = https.request({
             hostname: hostname,
             port: 443,
             path: path,
@@ -802,23 +749,23 @@ async function getSandboxKeyAsync(): Promise<string> {
             });
 
             wxRes.on("end", async () => {
-                let result = x2js.xml2js(wxData) as any;
+                const result = x2js.xml2js(wxData) as any;
                 return resolve(result.xml.sandbox_signkey);
             });
         });
 
-        let nonceStr = uuid().replace(/-/g, '');
+        const nonceStr = uuid().replace(/-/g, '');
 
-        let data = [];
+        const data = [];
         data.push({ key: "mch_id", value: config.wx.mchId });
         data.push({ key: "nonce_str", value: nonceStr });
         data.push({ key: "sign_type", value: secureSignType });
 
-        let signature = getSignature(data, config.wx.mchKey);
+        const signature = getSignature(data, config.wx.mchKey);
 
         data.push({ key: "sign", value: signature });
 
-        let xmlData = x2js.js2xml({
+        const xmlData = x2js.js2xml({
             xml: {
                 mch_id: config.wx.mchId,
                 nonce_str: nonceStr,
@@ -841,7 +788,7 @@ async function requestUnifiedOrderAsync(data: any[]): Promise<any> {
     console.log(hostname, path);
 
     return new Promise((resolve, reject) => {
-        let request = https.request({
+        const request = https.request({
             hostname: hostname,
             port: 443,
             path: path,
@@ -856,7 +803,7 @@ async function requestUnifiedOrderAsync(data: any[]): Promise<any> {
 
             wxRes.on("end", async () => {
                 try {
-                    let result = x2js.xml2js(wxData) as any;
+                    const result = x2js.xml2js(wxData) as any;
 
                     console.log(result.xml);
 
@@ -886,7 +833,7 @@ async function requestUnifiedOrderAsync(data: any[]): Promise<any> {
             });
         });
 
-        let dataToPost = data.map(m => `<${m.key}>${m.value}</${m.key}>`).join("");
+        const dataToPost = data.map(m => `<${m.key}>${m.value}</${m.key}>`).join("");
         console.log(dataToPost);
         request.end(`<xml>${dataToPost}</xml>`);
     });
@@ -894,9 +841,9 @@ async function requestUnifiedOrderAsync(data: any[]): Promise<any> {
 
 async function queryUnifiedOrderAsync(orderInfo): Promise<any> {
     // https://api.mch.weixin.qq.com/pay/orderquery
-    let data = [];
-    let nonceStr = uuid().replace(/-/g, '');
-    let signType = secureSignType;
+    const data = [];
+    const nonceStr = uuid().replace(/-/g, '');
+    const signType = secureSignType;
     data.push({ key: 'appid', value: config.wx.appId });
     data.push({ key: 'mch_id', value: config.wx.mchId });
     if (orderInfo.transactionId) {
@@ -910,7 +857,7 @@ async function queryUnifiedOrderAsync(orderInfo): Promise<any> {
 
     const signature = await getSignatureBasedOnEnv(data, signType);
 
-    let dataToPost = {
+    const dataToPost = {
         appid: config.wx.appId,
         mch_id: config.wx.mchId,
         nonce_str: nonceStr,
@@ -929,7 +876,7 @@ async function queryUnifiedOrderAsync(orderInfo): Promise<any> {
     const path = "/pay/orderquery";
 
     return new Promise<string>((resolve, reject) => {
-        let request = https.request({
+        const request = https.request({
             hostname: hostname,
             port: 443,
             path: path,
@@ -943,12 +890,16 @@ async function queryUnifiedOrderAsync(orderInfo): Promise<any> {
             });
 
             wxRes.on("end", async () => {
-                let result = x2js.xml2js(wxData) as any;
+                const result = x2js.xml2js(wxData) as any;
                 return resolve(result.xml);
+            });
+
+            wxRes.on("error", (error) => {
+                return reject(error);
             });
         });
 
-        let xmlData = x2js.js2xml({
+        const xmlData = x2js.js2xml({
             xml: dataToPost
         });
         request.end(xmlData);
@@ -958,7 +909,7 @@ async function queryUnifiedOrderAsync(orderInfo): Promise<any> {
 async function getSignatureBasedOnEnv(data, signType?: string) {
     let signature: string;
     if (config.wx.sandbox) {
-        let sandboxKey = await getSandboxKeyAsync();
+        const sandboxKey = await getSandboxKeyAsync();
         signature = getSignature(data, sandboxKey, signType);
     }
     else {
@@ -996,7 +947,7 @@ async function createWXPaymentParams(payload) {
 }
 
 async function createWxSignatureAsync(payload) {
-    let ticket = await getJsApiTicket().catch(error => {
+    const ticket = await getJsApiTicket().catch(error => {
         console.error(error);
     });
     if (!ticket) {
@@ -1017,7 +968,7 @@ async function createWxSignatureAsync(payload) {
 export let getWxSignature = async (req, res, next) => {
     console.log("getWxSignature", req.body.payload);
 
-    let data = req.body.payload;
+    const data = req.body.payload;
     const signature = await createWxSignatureAsync(data).catch(error => {
         console.error(error);
     });
