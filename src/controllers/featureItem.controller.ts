@@ -44,7 +44,6 @@ export let createOneFeatureItem = async (req, res, next) => {
  */
 export let getFeatureItems = async (req, res, next) => {
     let featureitems = await featureItemModel.find();
-
     if (featureitems) {
         return res.json(featureitems);
     }
