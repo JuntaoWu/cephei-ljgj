@@ -72,7 +72,7 @@ export let createOrder = async (req, res, next) => {
     let orderid = "ORDER_" + _.random(1000, 9999) + "_" + moment(new Date()).format("YYYYMMDDHHmm");//("YYYYMMDDHHmm");
     let orderitem = new orderModel({
         orderid: orderid,
-        phoneNo: req.body.phoneNo,
+        phoneNo: req.body.phoneNo?req.body.phoneNo:currentUser.phoneNo,
         contactsUserName: req.body.contactsUserName,
         isGroupOrder: req.body.isGroupOrder ? req.body.isGroupOrder : false,
         orderContent: req.body.isGroupOrder ? ( gservice ? gservice.gServiceItemName : "无"):(req.body.projectid ? gservice.projectName : "无"),

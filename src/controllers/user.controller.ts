@@ -97,6 +97,35 @@ export let update = (req, res, next) => {
         .catch(e => next(e));
 }
 
+export let addDiscountItem = (req, res, next) => {
+    let currentUser: User = req.user;
+    
+    if(res.body.discountid)
+    {
+        currentUser.discountList[res.body.discountid] = true;
+    }
+    
+    return res.json({
+        error: false,
+        message: " add discouint ok id is "+res.body.discountid
+    });
+}
+
+export let removeDiscountItem = (req, res, next) => {
+    let currentUser: User = req.user;
+
+    if(res.body.discountid)
+    {
+        delete currentUser.discountList[res.body.discountid];
+    }
+    
+    return res.json({
+        error: false,
+        message: " remove discouint sucess id is "+res.body.discountid
+    });
+}
+
+
 /**
  * Get user list.
  * @property {number} req.query.skip - Number of users to be skipped.
