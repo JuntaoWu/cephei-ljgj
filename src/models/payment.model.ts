@@ -41,11 +41,15 @@ export enum PaymentStatus {
             orderItem.paymentStatus = OrderPaymentStatus.Completed;
         }
 
-        orderItem.paidAmount = orderAmount - (paidFee + (+this.totalFee));
+        orderItem.paidAmount = (paidFee + (+this.totalFee));
 
-        existingPayments.filter(payment => payment && payment.fundItemId).forEach(payment => {
-            funditemModel.update({ fundItemId: payment.fundItemId }, { $set: { fundItemStatus: FundStatus.Completed } });
-        });
+        await funditemModel.updateMany(
+            {
+                fundItemId: { $in: existingPayments.filter(payment => payment.fundItemId).map(m => m.fundItemId) }
+            },
+            {
+                $set: { fundItemStatus: FundStatus.Completed }
+            });
     }
     else if (this.status == PaymentStatus.Waiting && (!orderItem.paymentStatus || orderItem.paymentStatus != OrderPaymentStatus.Closed)) {
         orderItem.paymentStatus = OrderPaymentStatus.Waiting;

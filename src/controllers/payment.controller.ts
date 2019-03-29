@@ -325,10 +325,13 @@ export let createUnifiedOrder = async (req, res, next) => {
 async function checkIncompletePayments(existingPayments: any[]) {
 
     const completedPayments = existingPayments.filter(i => i.status == PaymentStatus.Completed);
-    completedPayments.filter(payment => payment.fundItemId).forEach(async payment => {
-        console.log('completed payments', payment.fundItemId);
-        await funditemModel.updateOne({ fundItemId: payment.fundItemId }, { $set: { fundItemStatus: FundStatus.Completed } });
-    });
+    await funditemModel.updateMany(
+        {
+            fundItemId: { $in: completedPayments.filter(payment => payment.fundItemId).map(m => m.fundItemId) }
+        },
+        {
+            $set: { fundItemStatus: FundStatus.Completed }
+        });
 
     // Check if some payment status had not been updated.
     const inCompletedPayments = existingPayments.filter(i => i.status != PaymentStatus.Completed);
