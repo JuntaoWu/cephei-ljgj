@@ -1,6 +1,7 @@
 import { prop, Typegoose, ModelType, InstanceType, pre, post } from 'typegoose';
 import OrderItemModel, { OrderPaymentStatus } from './order.model';
 import _ from 'lodash';
+import funditemModel, { FundStatus } from './funditem.model';
 
 /**
  * Payment Schema
@@ -41,6 +42,10 @@ export enum PaymentStatus {
         }
 
         orderItem.paidAmount = orderAmount - (paidFee + (+this.totalFee));
+
+        existingPayments.filter(payment => payment && payment.fundItemId).forEach(payment => {
+            funditemModel.update({ fundItemId: payment.fundItemId }, { $set: { fundItemStatus: FundStatus.Completed } });
+        });
     }
     else if (this.status == PaymentStatus.Waiting && (!orderItem.paymentStatus || orderItem.paymentStatus != OrderPaymentStatus.Closed)) {
         orderItem.paymentStatus = OrderPaymentStatus.Waiting;

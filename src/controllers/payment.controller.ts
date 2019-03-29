@@ -261,7 +261,7 @@ export let createUnifiedOrder = async (req, res, next) => {
     if (wxOpenId) {
         data.push({ key: 'openid', value: wxOpenId });
     }
-    data.push({ key: "sign_type", value: secureSignType });
+    data.push({ key: 'sign_type', value: secureSignType });
 
     const result = await requestUnifiedOrderAsync(data).catch(error => {
         console.error(error);
@@ -271,7 +271,7 @@ export let createUnifiedOrder = async (req, res, next) => {
 
         if (result && result.err_code) {
             console.error(result.err_code, result.err_code_des);
-            if (result.err_code == "ORDERPAID") {
+            if (result.err_code == 'ORDERPAID') {
                 // now change paymentModel's status.
                 // todo: check the sign.
                 const payment = await PaymentModel.findOne({ outTradeNo: outTradeNo });
@@ -303,7 +303,7 @@ export let createUnifiedOrder = async (req, res, next) => {
         // save the current payment in db.
         const payment = new PaymentModel({
             appId: config.wx.appId,
-            feeType: "CNY",
+            feeType: 'CNY',
             mchId: config.wx.mchId,
             openId: wxOpenId,
             orderId: orderItem.orderid,
@@ -317,7 +317,7 @@ export let createUnifiedOrder = async (req, res, next) => {
 
     return res.json({
         code: 0,
-        message: "OK",
+        message: 'OK',
         data: paymentParams
     });
 };
@@ -443,7 +443,7 @@ export let createUnifiedOrderByFundItemViaClient = async (req, res, next) => {
 
     await checkIncompletePayments(existingPayments);
 
-    const paidAlready = _(existingPayments.filter(i => i.status == PaymentStatus.Completed)).sumBy("totalFee");
+    const paidAlready = _(existingPayments.filter(i => i.status == PaymentStatus.Completed)).sumBy('totalFee');
     const totalFee = Math.floor(+orderItem.orderAmount * 100);
     const remainTotalFee = totalFee - paidAlready;
     const fundItemFee = Math.floor(+fundItem.fundItemAmount * 100);
@@ -471,16 +471,16 @@ export let createUnifiedOrderByFundItemViaClient = async (req, res, next) => {
 
     const data = [];
     const nonceStr = uuid().replace(/-/g, '');
-    const timeStart = moment().format("YYYYMMDDHHmmss");
-    const timeExpire = moment().add(15, "minutes").format("YYYYMMDDHHmmss");
+    const timeStart = moment().format('YYYYMMDDHHmmss');
+    const timeExpire = moment().add(15, 'minutes').format('YYYYMMDDHHmmss');
     data.push({ key: 'appid', value: config.wx.appId });
     data.push({ key: 'mch_id', value: config.wx.mchId });
     data.push({ key: 'device_info', value: 'WEB' });
     data.push({ key: 'nonce_str', value: nonceStr });
-    data.push({ key: 'body', value: "邻家工匠-订单支付" });
-    data.push({ key: 'detail', value: "detail" });
+    data.push({ key: 'body', value: '邻家工匠-订单支付' });
+    data.push({ key: 'detail', value: 'detail' });
     data.push({ key: 'out_trade_no', value: outTradeNo });
-    data.push({ key: 'fee_type', value: "CNY" });
+    data.push({ key: 'fee_type', value: 'CNY' });
     data.push({ key: 'total_fee', value: fundItemFee });
     data.push({ key: 'spbill_create_ip', value: reqIP });
     data.push({ key: 'time_start', value: timeStart });
@@ -491,7 +491,7 @@ export let createUnifiedOrderByFundItemViaClient = async (req, res, next) => {
     if (wxOpenId) {
         data.push({ key: 'openid', value: wxOpenId });
     }
-    data.push({ key: "sign_type", value: secureSignType });
+    data.push({ key: 'sign_type', value: secureSignType });
 
     const result = await requestUnifiedOrderAsync(data).catch(error => {
         console.error(error);
@@ -501,7 +501,7 @@ export let createUnifiedOrderByFundItemViaClient = async (req, res, next) => {
 
         if (result && result.err_code) {
             console.error(result.err_code, result.err_code_des);
-            if (result.err_code == "ORDERPAID") {
+            if (result.err_code == 'ORDERPAID') {
                 // now change paymentModel's status.
                 // todo: check the sign.
                 const payment = await PaymentModel.findOne({ outTradeNo: outTradeNo });
@@ -533,7 +533,7 @@ export let createUnifiedOrderByFundItemViaClient = async (req, res, next) => {
         // save the current payment in db.
         const payment = new PaymentModel({
             appId: config.wx.appId,
-            feeType: "CNY",
+            feeType: 'CNY',
             mchId: config.wx.mchId,
             openId: wxOpenId,
             orderId: orderItem.orderid,
@@ -581,11 +581,11 @@ export let wxNotify = async (req: Request, res: Response, next: NextFunction) =>
      */
     if (req.body) {
         try {
-            console.log("wxNotify body:", req.body);
+            console.log('wxNotify body:', req.body);
             const result = x2js.xml2js(req.body) as any;
             if (!result || !result.xml) {
-                console.error("wxNotify", result);
-                const err = new APIError("Notify format error, failed.", httpStatus.FORBIDDEN);
+                console.error('wxNotify', result);
+                const err = new APIError('Notify format error, failed.', httpStatus.FORBIDDEN);
                 return next(err);
             }
 
@@ -610,7 +610,7 @@ export let wxNotify = async (req: Request, res: Response, next: NextFunction) =>
                     <return_msg><![CDATA[OK]]></return_msg>
                 </xml>`;
 
-            if (return_code != "SUCCESS") {
+            if (return_code != 'SUCCESS') {
                 // todo: payment failed.
                 console.log(result.return_msg);
                 return res.end(returnData);
@@ -626,7 +626,7 @@ export let wxNotify = async (req: Request, res: Response, next: NextFunction) =>
                 return res.end(returnData);
             }
 
-            const data = _.entries(result.xml).filter(pair => pair[0] !== "sign").map(pair => {
+            const data = _.entries(result.xml).filter(pair => pair[0] !== 'sign').map(pair => {
                 return { key: pair[0], value: pair[1] };
             });
 
@@ -656,13 +656,13 @@ export let wxNotify = async (req: Request, res: Response, next: NextFunction) =>
                         couponId: coupon_id,
                         tradeType: trade_type,
                         transactionId: transaction_id,
-                        status: result_code == "SUCCESS" ? PaymentStatus.Completed : PaymentStatus.Exception,
+                        status: result_code == 'SUCCESS' ? PaymentStatus.Completed : PaymentStatus.Exception,
                         errCode: err_code,
                         errCodeDes: err_code_des,
                     });
                 }
                 else {
-                    if (payment.totalFee != total_fee || result_code != "SUCCESS") {
+                    if (payment.totalFee != total_fee || result_code != 'SUCCESS') {
                         payment.status = PaymentStatus.Exception;
                     }
                     else {
@@ -691,14 +691,14 @@ export let wxNotify = async (req: Request, res: Response, next: NextFunction) =>
                 return res.end(returnData);
             }
             else {
-                console.error("Check Signature failed.");
-                const err = new APIError("Check Signature failed.", httpStatus.FORBIDDEN);
+                console.error('Check Signature failed.');
+                const err = new APIError('Check Signature failed.', httpStatus.FORBIDDEN);
                 return next(err);
             }
         }
         catch (error) {
             console.error(error);
-            const err = new APIError("handle wxNotify error.", httpStatus.INTERNAL_SERVER_ERROR);
+            const err = new APIError('handle wxNotify error.', httpStatus.INTERNAL_SERVER_ERROR);
             return next(err);
         }
     }
