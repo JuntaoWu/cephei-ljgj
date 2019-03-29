@@ -35,7 +35,7 @@ export enum PaymentStatus {
     if (this.status == PaymentStatus.Completed) {
         let existingPayments = await PaymentModel.find({ orderId: this.orderId, status: PaymentStatus.Completed });
         let paidFee = _(existingPayments).sumBy("totalFee");
-        let orderAmount = Math.floor(+orderItem.orderAmount * 100);
+        let orderAmount = Math.floor(+orderItem.orderAmount);
         if (orderAmount <= (paidFee + (+this.totalFee))) {
             // todo: 
             orderItem.paymentStatus = OrderPaymentStatus.Completed;

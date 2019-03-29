@@ -79,7 +79,7 @@ export let createUnifiedOrderByFundItem = async (req, res, next) => {
     });
 
     const paidAlready = _(existingPayments.filter(i => i.status == PaymentStatus.Completed)).sumBy("totalFee");
-    const totalFee = Math.floor(+orderItem.orderAmount * 100);
+    const totalFee = Math.floor(+orderItem.orderAmount);
     const remainTotalFee = totalFee - paidAlready;
     console.log("paidAlready, totalFee, remainTotalFee:", paidAlready, totalFee, remainTotalFee);
 
@@ -89,7 +89,7 @@ export let createUnifiedOrderByFundItem = async (req, res, next) => {
         return next(err);
     }
 
-    const fundItemFeeToPay = Math.floor(+fundItem.fundItemAmount * 100);
+    const fundItemFeeToPay = Math.floor(+fundItem.fundItemAmount);
     const outTradeNo = `${orderItem.orderid}-${existingPayments.length}`;
 
     const reqIP = req.headers['x-forwarded-for'] ||
@@ -214,7 +214,7 @@ export let createUnifiedOrder = async (req, res, next) => {
     await checkIncompletePayments(existingPayments);
 
     const paidAlready = _(existingPayments.filter(i => i.status == PaymentStatus.Completed)).sumBy("totalFee");
-    const totalFee = Math.floor(+orderItem.orderAmount * 100);
+    const totalFee = Math.floor(+orderItem.orderAmount);
     const remainTotalFee = totalFee - paidAlready;
     console.log('paidAlready, totalFee, remainTotalFee:', paidAlready, totalFee, remainTotalFee);
 
@@ -324,6 +324,12 @@ export let createUnifiedOrder = async (req, res, next) => {
 
 async function checkIncompletePayments(existingPayments: any[]) {
 
+    const completedPayments = existingPayments.filter(i => i.status == PaymentStatus.Completed);
+    completedPayments.filter(payment => payment.fundItemId).forEach(async payment => {
+        console.log('completed payments', payment.fundItemId);
+        await funditemModel.updateOne({ fundItemId: payment.fundItemId }, { $set: { fundItemStatus: FundStatus.Completed } });
+    });
+
     // Check if some payment status had not been updated.
     const inCompletedPayments = existingPayments.filter(i => i.status != PaymentStatus.Completed);
     // We'd like to await all of the queryUnifiedOrderAsync;
@@ -404,7 +410,7 @@ async function checkIncompletePayments(existingPayments: any[]) {
 }
 
 export let createUnifiedOrderByFundItemViaClient = async (req, res, next) => {
-
+    console.log('createUnifiedOrderByFundItemViaClient', 'fundItemId:', req.body.fundItemId, 'tradeType:', req.body.tradeType, 'wxOpenId:', req.body.wxOpenId);
     // *Step 1: check user
     const user = req.user;
 
@@ -444,9 +450,9 @@ export let createUnifiedOrderByFundItemViaClient = async (req, res, next) => {
     await checkIncompletePayments(existingPayments);
 
     const paidAlready = _(existingPayments.filter(i => i.status == PaymentStatus.Completed)).sumBy('totalFee');
-    const totalFee = Math.floor(+orderItem.orderAmount * 100);
+    const totalFee = Math.floor(+orderItem.orderAmount);
     const remainTotalFee = totalFee - paidAlready;
-    const fundItemFee = Math.floor(+fundItem.fundItemAmount * 100);
+    const fundItemFee = Math.floor(+fundItem.fundItemAmount);
     console.log('paidAlready, totalFee, remainTotalFee:', paidAlready, totalFee, remainTotalFee);
 
     if (remainTotalFee <= 0 || fundItemFee <= 0) {
