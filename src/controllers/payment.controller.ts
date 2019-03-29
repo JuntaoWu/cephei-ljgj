@@ -208,10 +208,14 @@ export let createUnifiedOrder = async (req, res, next) => {
     }
 
     // *Step 2: check payments
-    const existingPayments = await PaymentModel.find({
+    let existingPayments = await PaymentModel.find({
         orderId: orderId,
     });
     await checkIncompletePayments(existingPayments);
+
+    existingPayments = await PaymentModel.find({
+        orderId: orderId,
+    });
 
     const paidAlready = _(existingPayments.filter(i => i.status == PaymentStatus.Completed)).sumBy("totalFee");
     const totalFee = Math.floor(+orderItem.orderAmount);
@@ -325,13 +329,20 @@ export let createUnifiedOrder = async (req, res, next) => {
 async function checkIncompletePayments(existingPayments: any[]) {
 
     const completedPayments = existingPayments.filter(i => i.status == PaymentStatus.Completed);
-    await funditemModel.updateMany(
+    const completedFundItemIds = completedPayments.filter(payment => payment.fundItemId).map(m => m.fundItemId);
+    console.log("completedFundItemIds:", completedFundItemIds);
+
+    const result = await funditemModel.updateMany(
         {
-            fundItemId: { $in: completedPayments.filter(payment => payment.fundItemId).map(m => m.fundItemId) }
+            fundItemId: { $in: completedFundItemIds }
         },
         {
             $set: { fundItemStatus: FundStatus.Completed }
+        }, (err, raw) => {
+            console.error(err);
         });
+
+    console.log(result);
 
     // Check if some payment status had not been updated.
     const inCompletedPayments = existingPayments.filter(i => i.status != PaymentStatus.Completed);
@@ -348,6 +359,8 @@ async function checkIncompletePayments(existingPayments: any[]) {
             console.error('queryUnifiedOrderAsync failed.', i.transactionId, i.outTradeNo);
             return;
         }
+
+        console.log("wxPayment", wxPayment);
 
         const {
             appid, mch_id, nonce_str, sign, return_code, result_code, err_code, err_code_des,
@@ -425,7 +438,7 @@ export let createUnifiedOrderByFundItemViaClient = async (req, res, next) => {
     const wxOpenId = req.body.wxOpenId;
     const tradeType = req.body.tradeType;
 
-    const fundItem = await funditemModel.findOne({
+    let fundItem = await funditemModel.findOne({
         fundItemId: req.body.fundItemId,
     });
 
@@ -451,6 +464,16 @@ export let createUnifiedOrderByFundItemViaClient = async (req, res, next) => {
     });
 
     await checkIncompletePayments(existingPayments);
+
+    fundItem = await funditemModel.findOne({
+        fundItemId: req.body.fundItemId,
+    });
+
+    if (!fundItem || (fundItem.fundItemStatus != FundStatus.Waiting)) {
+        // Cannot find proper orderItem to pay.
+        const err = new APIError('Unable to find orderItem to pay after checkIncompletePayments.', httpStatus.NOT_FOUND, true);
+        return next(err);
+    }
 
     const paidAlready = _(existingPayments.filter(i => i.status == PaymentStatus.Completed)).sumBy('totalFee');
     const totalFee = Math.floor(+orderItem.orderAmount);
@@ -547,7 +570,7 @@ export let createUnifiedOrderByFundItemViaClient = async (req, res, next) => {
             openId: wxOpenId,
             orderId: orderItem.orderid,
             outTradeNo: outTradeNo,
-            totalFee: remainTotalFee,
+            totalFee: fundItemFee,
             tradeType: tradeType,
             status: PaymentStatus.Waiting,
             fundItemId: fundItem.fundItemId,
@@ -672,6 +695,7 @@ export let wxNotify = async (req: Request, res: Response, next: NextFunction) =>
                 }
                 else {
                     if (payment.totalFee != total_fee || result_code != 'SUCCESS') {
+                        console.log("payment.totalFee:", payment.totalFee, total_fee, result_code);
                         payment.status = PaymentStatus.Exception;
                     }
                     else {

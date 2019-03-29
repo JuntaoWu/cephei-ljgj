@@ -43,12 +43,16 @@ export enum PaymentStatus {
 
         orderItem.paidAmount = (paidFee + (+this.totalFee));
 
+        const completedFundItemIds = existingPayments.filter(payment => payment.fundItemId).map(m => m.fundItemId);
+        console.log("completedFundItemIds:", completedFundItemIds);
+
         await funditemModel.updateMany(
             {
-                fundItemId: { $in: existingPayments.filter(payment => payment.fundItemId).map(m => m.fundItemId) }
-            },
-            {
+                fundItemId: this.fundItemId
+            }, {
                 $set: { fundItemStatus: FundStatus.Completed }
+            }, (err, raw) => {
+                console.error(err);
             });
     }
     else if (this.status == PaymentStatus.Waiting && (!orderItem.paymentStatus || orderItem.paymentStatus != OrderPaymentStatus.Closed)) {
