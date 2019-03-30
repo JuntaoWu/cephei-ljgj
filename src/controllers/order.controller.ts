@@ -159,6 +159,12 @@ async function assignOrderAsync(order: OrderItem) {
                     return reject(ex);
                 }
             });
+            wxRes.on("error", (error) => {
+                return reject(error);
+            });
+        });
+        request.on("error", (error) => {
+            return reject(error);
         });
         request.end(postData);
     });
