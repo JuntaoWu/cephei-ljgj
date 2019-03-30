@@ -4,15 +4,19 @@ import { Request, Response, NextFunction } from "express";
 import APIError from "../helpers/APIError";
 
 export let authorize = (req, res, next) => {
-    return res.redirect(`https://open.weixin.qq.com/connect/oauth2/authorize?appid=${config.wx.appId}&redirect_uri=${config.wx.redirectUrl}&response_type=code&scope=snsapi_userinfo&state=${encodeURI(req.query.state)}#wechat_redirect`);
+    return res.redirect(`https://open.weixin.qq.com/connect/oauth2/authorize?appid=${config.wx.appId}&redirect_uri=${config.wx.redirectUrl}&response_type=code&scope=snsapi_userinfo&state=${encodeURIComponent(req.query.state)}#wechat_redirect`);
 };
 
 export let login = (req: Request, res: Response, next: NextFunction) => {
     if (req.user) {
         res.cookie('wxOpenId', req.user.wxOpenId);
-        let redirectUrl = decodeURI(req.query.state);
+        let redirectUrl = decodeURIComponent(req.query.state);
+        console.log('state:', redirectUrl);
         if (/\?/.test(redirectUrl)) {
             redirectUrl += `&wxOpenId=${req.user.wxOpenId}`;
+        }
+        else if (/#/.test(redirectUrl)) {
+            redirectUrl = redirectUrl.replace(/(.*)#([^#]*)/, `$1?wxOpenId=${req.user.wxOpenId}#$2`);
         }
         else {
             redirectUrl += `?wxOpenId=${req.user.wxOpenId}`;

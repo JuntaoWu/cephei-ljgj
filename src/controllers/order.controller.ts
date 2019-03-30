@@ -90,6 +90,12 @@ export let createOrder = async (req, res, next) => {
 
     let savedItem = await orderitem.save();
 
+    // todo: automatically send events when order created. this should be an async task.
+    await assignOrderAsync(savedItem).catch(error => {
+        console.log(`assignOrderAsync [${savedItem.orderid}] error: ${error}`);
+        console.error(error);
+    });
+
     return res.json({
         code: 0,
         message: "OK",
@@ -99,6 +105,64 @@ export let createOrder = async (req, res, next) => {
         }
     });
 };
+
+async function assignOrderAsync(order: OrderItem) {
+    const serviceJwtToken = jwt.sign({
+        service: config.service.name,
+        peerName: config.service.peerName,
+    }, config.service.jwtSecret);
+
+    const hostname = config.service.peerHost;
+    const port = config.service.peerPort;
+    const sharedOrderPath = `/api/shared/assignOrder/?token=${serviceJwtToken}`;
+    console.log(hostname, sharedOrderPath);
+
+    let postData = JSON.stringify({
+        orderId: order.orderid,
+    });
+
+    return new Promise((resolve, reject) => {
+        let request = http.request({
+            hostname: hostname,
+            port: port,
+            path: sharedOrderPath,
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(postData)
+            }
+        }, (wxRes) => {
+            console.log("response from service api /api/shared/assignOrder");
+
+            if (wxRes.statusCode != 200) {
+                console.error(wxRes.statusCode, wxRes.statusMessage);
+                return reject(wxRes.statusMessage);
+            }
+
+            let orderData = "";
+            wxRes.on("data", (chunk) => {
+                orderData += chunk;
+            });
+            wxRes.on("end", async () => {
+
+                try {
+                    let result = JSON.parse(orderData);
+                    let { code, message, data } = result;
+                    if (code !== 0) {
+                        return reject(message);
+                    }
+                    else {
+                        return resolve(data);
+                    }
+                }
+                catch (ex) {
+                    return reject(ex);
+                }
+            });
+        });
+        request.end(postData);
+    });
+}
 
 export let getContract = async (req, res, next) => {
     let ordercontractObj = await orderContractModel.findOne({ orderid: req.query.orderid });
