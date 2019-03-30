@@ -74,7 +74,12 @@ export let createUnifiedOrderByFundItem = async (req, res, next) => {
         return next(err);
     }
 
-    const existingPayments = await PaymentModel.find({
+    // *Step 2: check payments
+    let existingPayments = await PaymentModel.find({
+        orderId: orderItem.orderid,
+    });
+    await checkIncompletePayments(existingPayments);
+    existingPayments = await PaymentModel.find({
         orderId: orderItem.orderid,
     });
 
@@ -90,12 +95,21 @@ export let createUnifiedOrderByFundItem = async (req, res, next) => {
     }
 
     const fundItemFeeToPay = Math.floor(+fundItem.fundItemAmount);
-    const outTradeNo = `${orderItem.orderid}-${existingPayments.length}`;
 
-    const reqIP = req.headers['x-forwarded-for'] ||
+    // *Step 3: check waiting payment for outTradeNo
+    const waitingPayment = existingPayments.filter(i => i.status == PaymentStatus.Waiting).find(i => i.fundItemId == fundItem.fundItemId && i.tradeType == tradeType);
+
+    let outTradeNo = `${+new Date()}-${_.random(1000, 9999)}`;
+    if (waitingPayment) {
+        outTradeNo = waitingPayment.outTradeNo.toString();
+    }
+
+    let reqIP = req.headers['x-forwarded-for'] ||
         req.connection.remoteAddress ||
         req.socket.remoteAddress ||
         req.connection.socket.remoteAddress;
+
+    reqIP = reqIP && reqIP.split(',')[0];
 
     const data = [];
     const nonceStr = uuid().replace(/-/g, '');
@@ -212,7 +226,6 @@ export let createUnifiedOrder = async (req, res, next) => {
         orderId: orderId,
     });
     await checkIncompletePayments(existingPayments);
-
     existingPayments = await PaymentModel.find({
         orderId: orderId,
     });
@@ -229,7 +242,7 @@ export let createUnifiedOrder = async (req, res, next) => {
     }
 
     // *Step 3: check waiting payment for outTradeNo
-    const waitingPayment = existingPayments.filter(i => i.status == PaymentStatus.Waiting).find(i => i.totalFee == remainTotalFee);
+    const waitingPayment = existingPayments.filter(i => i.status == PaymentStatus.Waiting).find(i => i.totalFee == remainTotalFee && !i.fundItemId && i.tradeType == tradeType);
 
     let outTradeNo = `${+new Date()}-${_.random(1000, 9999)}`;
     if (waitingPayment) {
@@ -459,11 +472,13 @@ export let createUnifiedOrderByFundItemViaClient = async (req, res, next) => {
     }
 
     // *Step 2: check payments
-    const existingPayments = await PaymentModel.find({
+    let existingPayments = await PaymentModel.find({
         orderId: orderItem.orderid,
     });
-
     await checkIncompletePayments(existingPayments);
+    existingPayments = await PaymentModel.find({
+        orderId: orderItem.orderid,
+    });
 
     fundItem = await funditemModel.findOne({
         fundItemId: req.body.fundItemId,
@@ -478,17 +493,17 @@ export let createUnifiedOrderByFundItemViaClient = async (req, res, next) => {
     const paidAlready = _(existingPayments.filter(i => i.status == PaymentStatus.Completed)).sumBy('totalFee');
     const totalFee = Math.floor(+orderItem.orderAmount);
     const remainTotalFee = totalFee - paidAlready;
-    const fundItemFee = Math.floor(+fundItem.fundItemAmount);
+    const fundItemFeeToPay = Math.floor(+fundItem.fundItemAmount);
     console.log('paidAlready, totalFee, remainTotalFee:', paidAlready, totalFee, remainTotalFee);
 
-    if (remainTotalFee <= 0 || fundItemFee <= 0) {
+    if (remainTotalFee <= 0 || fundItemFeeToPay <= 0) {
         // Cannot find proper orderItem to pay.
         const err = new APIError('Total fee is 0.', httpStatus.NOT_FOUND, true);
         return next(err);
     }
 
     // *Step 3: check waiting payment for outTradeNo
-    const waitingPayment = existingPayments.filter(i => i.status == PaymentStatus.Waiting).find(i => i.fundItemId == fundItem.fundItemId);
+    const waitingPayment = existingPayments.filter(i => i.status == PaymentStatus.Waiting).find(i => i.fundItemId == fundItem.fundItemId && i.tradeType == tradeType);
 
     let outTradeNo = `${+new Date()}-${_.random(1000, 9999)}`;
     if (waitingPayment) {
@@ -513,7 +528,7 @@ export let createUnifiedOrderByFundItemViaClient = async (req, res, next) => {
     data.push({ key: 'detail', value: 'detail' });
     data.push({ key: 'out_trade_no', value: outTradeNo });
     data.push({ key: 'fee_type', value: 'CNY' });
-    data.push({ key: 'total_fee', value: fundItemFee });
+    data.push({ key: 'total_fee', value: fundItemFeeToPay });
     data.push({ key: 'spbill_create_ip', value: reqIP });
     data.push({ key: 'time_start', value: timeStart });
     data.push({ key: 'time_expire', value: timeExpire });
@@ -570,7 +585,7 @@ export let createUnifiedOrderByFundItemViaClient = async (req, res, next) => {
             openId: wxOpenId,
             orderId: orderItem.orderid,
             outTradeNo: outTradeNo,
-            totalFee: fundItemFee,
+            totalFee: fundItemFeeToPay,
             tradeType: tradeType,
             status: PaymentStatus.Waiting,
             fundItemId: fundItem.fundItemId,
