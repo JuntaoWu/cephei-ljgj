@@ -31,4 +31,8 @@ router.route('/wxNotify')
 router.route('/createUnifiedOrderByFundItem')
     .post(paymentCtrl.createUnifiedOrderByFundItem);
 
+router.route('/createUnifiedOrderByFundItemViaClient')
+    .post(passport.authenticate("jwt", { failWithError: true }),
+        paymentCtrl.createUnifiedOrderByFundItemViaClient);
+
 export default router;

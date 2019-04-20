@@ -1,6 +1,7 @@
 import { prop, Typegoose, ModelType, InstanceType, pre, post } from 'typegoose';
 import OrderItemModel, { OrderPaymentStatus } from './order.model';
 import _ from 'lodash';
+import funditemModel, { FundStatus } from './funditem.model';
 
 /**
  * Payment Schema
@@ -34,13 +35,25 @@ export enum PaymentStatus {
     if (this.status == PaymentStatus.Completed) {
         let existingPayments = await PaymentModel.find({ orderId: this.orderId, status: PaymentStatus.Completed });
         let paidFee = _(existingPayments).sumBy("totalFee");
-        let orderAmount = Math.floor(+orderItem.orderAmount * 100);
+        let orderAmount = Math.floor(+orderItem.orderAmount);
         if (orderAmount <= (paidFee + (+this.totalFee))) {
             // todo: 
             orderItem.paymentStatus = OrderPaymentStatus.Completed;
         }
 
-        orderItem.paidAmount = orderAmount - (paidFee + (+this.totalFee));
+        orderItem.paidAmount = (paidFee + (+this.totalFee));
+
+        const completedFundItemIds = existingPayments.filter(payment => payment.fundItemId).map(m => m.fundItemId);
+        console.log("completedFundItemIds:", completedFundItemIds);
+
+        await funditemModel.updateMany(
+            {
+                fundItemId: this.fundItemId
+            }, {
+                $set: { fundItemStatus: FundStatus.Completed }
+            }, (err, raw) => {
+                console.error(err);
+            });
     }
     else if (this.status == PaymentStatus.Waiting && (!orderItem.paymentStatus || orderItem.paymentStatus != OrderPaymentStatus.Closed)) {
         orderItem.paymentStatus = OrderPaymentStatus.Waiting;

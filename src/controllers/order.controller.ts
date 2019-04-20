@@ -22,7 +22,7 @@ import orderDiscountModel from '../models/orderdiscount.model';
 import orderWorkModel from '../models/orderwork.model';
 import ProjectItemModel, { ProjectItem } from '../models/project.model';
 import funditemModel, { FundStatus } from '../models/funditem.model';
- 
+
 import groupHouseItemModel, { groupServicesItem } from '../models/house.model';
 import * as _ from 'lodash';
 
@@ -54,29 +54,26 @@ export let createOrder = async (req, res, next) => {
 
     let gservice;
     let groupHouseObj;
-    if(req.body.isGroupOrder)
-    {
+    if (req.body.isGroupOrder) {
         gservice = await groupServiceModel.findOne({ gServiceItemid: req.body.gServiceItemid });
-        groupHouseObj = await groupHouseItemModel.findOne({groupid:req.body.groupid});
-        let updateJoinNo = await groupHouseItemModel.update({ "groupid": req.body.groupid }, { "userJoinCount":Number( groupHouseObj.userJoinCount )+1 });
-        if(updateJoinNo!= null)
-        {
-            
+        groupHouseObj = await groupHouseItemModel.findOne({ groupid: req.body.groupid });
+        let updateJoinNo = await groupHouseItemModel.update({ "groupid": req.body.groupid }, { "userJoinCount": Number(groupHouseObj.userJoinCount) + 1 });
+        if (updateJoinNo != null) {
+
         }
     }
-    else
-    {
+    else {
         gservice = await ProjectItemModel.findOne({ projectid: req.body.projectid });
     }
 
     let orderid = "ORDER_" + _.random(1000, 9999) + "_" + moment(new Date()).format("YYYYMMDDHHmm");//("YYYYMMDDHHmm");
     let orderitem = new orderModel({
         orderid: orderid,
-        phoneNo: req.body.phoneNo?req.body.phoneNo:currentUser.phoneNo,
+        phoneNo: req.body.phoneNo ? req.body.phoneNo : currentUser.phoneNo,
         contactsUserName: req.body.contactsUserName,
         isGroupOrder: req.body.isGroupOrder ? req.body.isGroupOrder : false,
-        orderContent: req.body.isGroupOrder ? ( gservice ? gservice.gServiceItemName : "无"):(req.body.projectid ? gservice.projectName : "无"),
-        orderAddress: req.body.orderAddress ? req.body.orderAddress : req.body.isGroupOrder ? groupHouseObj.houseAddress:"无" ,
+        orderContent: req.body.isGroupOrder ? (gservice ? gservice.gServiceItemName : "无") : (req.body.projectid ? gservice.projectName : "无"),
+        orderAddress: req.body.orderAddress ? req.body.orderAddress : req.body.isGroupOrder ? groupHouseObj.houseAddress : "无",
         groupid: req.body.groupid ? req.body.groupid : "无",
         orderDescription: req.body.orderDescription ? req.body.orderDescription : "无",
         gServiceItemid: req.body.gServiceItemid ? req.body.gServiceItemid : "无",
@@ -90,6 +87,12 @@ export let createOrder = async (req, res, next) => {
 
     let savedItem = await orderitem.save();
 
+    // todo: automatically send events when order created. this should be an async task.
+    await assignOrderAsync(savedItem).catch(error => {
+        console.log(`assignOrderAsync [${savedItem.orderid}] error: ${error}`);
+        console.error(error);
+    });
+
     return res.json({
         code: 0,
         message: "OK",
@@ -99,6 +102,70 @@ export let createOrder = async (req, res, next) => {
         }
     });
 };
+
+async function assignOrderAsync(order: OrderItem) {
+    const serviceJwtToken = jwt.sign({
+        service: config.service.name,
+        peerName: config.service.peerName,
+    }, config.service.jwtSecret);
+
+    const hostname = config.service.peerHost;
+    const port = config.service.peerPort;
+    const sharedOrderPath = `/api/shared/assignOrder/?token=${serviceJwtToken}`;
+    console.log(hostname, sharedOrderPath);
+
+    let postData = JSON.stringify({
+        orderId: order.orderid,
+    });
+
+    return new Promise((resolve, reject) => {
+        let request = http.request({
+            hostname: hostname,
+            port: port,
+            path: sharedOrderPath,
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': Buffer.byteLength(postData)
+            }
+        }, (wxRes) => {
+            console.log("response from service api /api/shared/assignOrder");
+
+            if (wxRes.statusCode != 200) {
+                console.error(wxRes.statusCode, wxRes.statusMessage);
+                return reject(wxRes.statusMessage);
+            }
+
+            let orderData = "";
+            wxRes.on("data", (chunk) => {
+                orderData += chunk;
+            });
+            wxRes.on("end", async () => {
+
+                try {
+                    let result = JSON.parse(orderData);
+                    let { code, message, data } = result;
+                    if (code !== 0) {
+                        return reject(message);
+                    }
+                    else {
+                        return resolve(data);
+                    }
+                }
+                catch (ex) {
+                    return reject(ex);
+                }
+            });
+            wxRes.on("error", (error) => {
+                return reject(error);
+            });
+        });
+        request.on("error", (error) => {
+            return reject(error);
+        });
+        request.end(postData);
+    });
+}
 
 export let getContract = async (req, res, next) => {
     let ordercontractObj = await orderContractModel.findOne({ orderid: req.query.orderid });
@@ -173,7 +240,7 @@ export let getMyOrders = async (req, res, next) => {
 
     let currentUser: User = req.user;
 
-    let model = await orderModel.find({ createdBy: currentUser.phoneNo }).sort({'orderTime': 'desc'});
+    let model = await orderModel.find({ createdBy: currentUser.phoneNo }).sort({ 'orderTime': 'desc' });
     let shotOrders = model.map(m => {
         let result = new shotOrderItem();
         result.orderid = m.orderid;
@@ -276,23 +343,22 @@ export let getOrderInfo = async (req, res, next) => {
         });
     }
 
-    let funditems = [] ;
-    if( req.query.orderid != null)
-    {
+    let funditems = [];
+    if (req.query.orderid != null) {
         let funds = await funditemModel.find({ orderid: req.query.orderid });
-        if(funds)
-        {   
-            funds.map(m => {
+        if (funds) {
+            funditems = funds.map(m => {
                 let result = {
+                    fundItemId: m.fundItemId,
                     fundItemTitle: m.fundItemTitle,
+                    fundItemType: m.fundItemType,
                     fundItemAmount: m.fundItemAmount,
                     fundItemStatus: m.fundItemStatus
                 }
-                funditems.push(result);
+                return result;
             });
         }
-        else
-        {
+        else {
             funditems = null;
         }
     }
@@ -339,8 +405,8 @@ export let getOrderInfo = async (req, res, next) => {
     */
 
     let orderWorkobj = await orderWorkModel.find({ orderid: req.query.orderid });
-    let groupobj = model.isGroupOrder ?  await groupHouseItemModel.findOne({ groupid: model.groupid}):null;
- 
+    let groupobj = model.isGroupOrder ? await groupHouseItemModel.findOne({ groupid: model.groupid }) : null;
+
     let orderworks = orderWorkobj.map(m => {
         let result = {
             orderworkid: m.orderWorkid,
@@ -355,23 +421,23 @@ export let getOrderInfo = async (req, res, next) => {
         orderid: model.orderid,
         orderBaseInfo:
         {
-            orderContent: model.orderContent ,
+            orderContent: model.orderContent,
             orderTime: model.orderTime,
             orderStatus: model.orderStatus,
             orderAddress: model.orderAddress,
-            contactsUserName:model.contactsUserName,
-            phoneNo:model.phoneNo
+            contactsUserName: model.contactsUserName,
+            phoneNo: model.phoneNo
         },
         groupOrderInfo: model.isGroupOrder ? {
-            houseName:  groupobj?groupobj.houseName:null,
+            houseName: groupobj ? groupobj.houseName : null,
             groupService: service.gServiceItemName
         } : null,
-        fundItems:funditems,
+        fundItems: funditems,
         orderAmountInfo:
         {
             orderAmount: model.orderAmount,
-            paidAmount: model.paidAmount,
-            surplusAmount: Number(model.orderAmount) - Number(model.paidAmount),
+            paidAmount: model.paidAmount || 0,
+            surplusAmount: Math.max(0, +model.orderAmount - (+model.paidAmount || 0)),
             paymentStatus: model.paymentStatus,
             orderDiscountList: usrdiscounts
         },

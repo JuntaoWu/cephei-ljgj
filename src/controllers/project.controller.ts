@@ -155,7 +155,7 @@ export let createSubProItems = async (req, res, next) => {
  * @param next 
 */
 export let getProItemCase = async(req,res,next)=>{
-    const { limit = 6, skip = 0 } = req.query;
+    const { limit = 50, skip = 0 } = req.query;
     proCaseModel.find().limit(limit).skip(skip)
         .then((items) => res.json({
             error: false,

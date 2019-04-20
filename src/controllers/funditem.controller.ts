@@ -31,7 +31,7 @@ export let createOneFundItem = async (req, res, next) => {
         fundItemId: fundItemId,
         orderid: req.body.orderId,
         fundItemType: req.body.fundItemType,
-        fundItemAmount: req.body.fundItemAmount,
+        fundItemAmount: +req.body.fundItemAmount,
         fundItemStatus: FundStatus.Waiting
     });
 

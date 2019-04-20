@@ -7,7 +7,7 @@ import { InstanceType } from "typegoose";
 
 import { config } from '../config/config';
 import { APIError } from '../helpers/APIError';
-import OrderModel, { OrderItem } from '../models/order.model';
+import OrderModel, { OrderItem, OrderStatus } from '../models/order.model';
 
 import orderContractModel, { OrderContract } from '../models/orderContract.model';
 import orderWorkModel, { orderwork } from '../models/orderwork.model';
@@ -269,4 +269,26 @@ export let createOrderContract = async (req, res, next) => {
     });
 };
 
-export default { list, load, getOlderDetailInfo, editOrderAmount, createOrderContract, appendOrderWorkToOrder, editOrderWorkToOrder, getOrderContract };
+export let completeReviewOrder = async (req, res, next) => {
+    let model = await OrderModel.findOne({ orderid: req.params.orderId });
+    if (!model) {
+        return res.json({
+            code: -1,
+            error: true,
+            message: "have no order ! ",
+            data: ""
+        });
+    }
+
+    if(model.orderStatus == OrderStatus.Initializing) {
+        model.orderStatus = OrderStatus.Preparing;
+        await model.save();
+    }
+
+    return res.json({
+        code: 0,
+        message: "OK"
+    });
+};
+
+export default { list, load, getOlderDetailInfo, editOrderAmount, createOrderContract, appendOrderWorkToOrder, editOrderWorkToOrder, getOrderContract, completeReviewOrder };
