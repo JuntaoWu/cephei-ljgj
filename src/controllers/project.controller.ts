@@ -156,7 +156,7 @@ export let createSubProItems = async (req, res, next) => {
 */
 export let getProItemCase = async(req,res,next)=>{
     const { limit = 50, skip = 0 } = req.query;
-    proCaseModel.find().limit(limit).skip(skip)
+    proCaseModel.find().limit(limit).skip(skip).sort({'createdAt': 'desc'})
         .then((items) => res.json({
             error: false,
             message: "OK",
