@@ -11,7 +11,7 @@
   "dependencies": {
     "@alicloud/sms-sdk": "^1.1.4",
     "app-root-path": "^2.1.0",
-    "async": "^2.6.0",
+    "async": "^2.6.4",
     "bcrypt-nodejs": "^0.0.3",
     "bluebird": "^3.5.1",
     "body-parser": "^1.18.2",
