@@ -52,7 +52,7 @@
     "typegoose": "^5.2.1",
     "uuid": "^3.3.2",
     "winston": "^2.4.0",
-    "x2js": "^3.2.3"
+    "x2js": "^3.4.3"
   },
   "devDependencies": {
     "@types/app-root-path": "^1.2.4",
